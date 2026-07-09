@@ -1,5 +1,4 @@
 # AG.StepWizard
-
 [![CI](https://github.com/ademgashi/AG.StepWizard/actions/workflows/ci.yml/badge.svg)](https://github.com/ademgashi/AG.StepWizard/actions/workflows/ci.yml)
 [![NuGet](https://img.shields.io/nuget/v/AG.StepWizard.svg)](https://www.nuget.org/packages/AG.StepWizard)
 

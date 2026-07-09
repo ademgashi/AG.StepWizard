@@ -1,11 +1,33 @@
-bin/
-obj/
-.vs/
-artifacts/
-*.user
-*.suo
+# Build outputs
+[Bb]in/
+[Oo]bj/
+[Dd]ebug/
+[Rr]elease/
+[Aa]rtifacts/
+packages/
+TestResults/
+
+# NuGet artifacts
 *.nupkg
 *.snupkg
-TestResults/
-packages/
+*.nuspec
+
+# Visual Studio user/cache files
+.vs/
+*.suo
+*.user
+*.userosscache
+*.rsuser
+*.sln.docstates
+
+# Logs and generated caches
+*.log
 *.cache
+*.trx
+*.tmp
+*.bak
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
