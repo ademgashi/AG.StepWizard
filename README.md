@@ -1,66 +1,240 @@
-# Wizard .NET Library
+# AG.StepWizard
 
-> Library for easy creation of custom and Aero Wizards. Aero Wizard strictly follows Microsoft guidelines and uses Visual Styles to get visual theming.
+[![CI](https://github.com/ademgashi/AG.StepWizard/actions/workflows/ci.yml/badge.svg)](https://github.com/ademgashi/AG.StepWizard/actions/workflows/ci.yml)
+[![NuGet](https://img.shields.io/nuget/v/AG.StepWizard.svg)](https://www.nuget.org/packages/AG.StepWizard)
 
-## Online API documentation
+AG.StepWizard is a modern themed WinForms step wizard control for .NET Framework 4.7. It provides page hosting, a left step list, header, footer navigation, validation events, and a token-based theme catalog with light, dark, system, high contrast, Catppuccin, Solarized, Nord, Dracula, GitHub, Visual Studio, Fluent, and other editor-inspired appearances.
 
-Click [here for online documentation for all library elements](https://dahall.github.io/AeroWizard).
+This project was derived from the MIT-licensed AeroWizard project and intentionally removes the old Aero-style controls, Visual Styles rendering, VSIX templates, and generated documentation surface.
 
-## Project Overview
+## Screenshots
 
-This project provides three main controls:
-* **WizardPageContainer** - Allows for easy creation of a custom wizard. It manages page creation at design-time and navigation using user defined buttons.
-* **WizardControl** - Builds on the container to provide the full Aero Wizard experience. The wizard visual format pulls from the current system theme. As a result, this wizard will correctly morph on each OS. Under XP, it will provide a old, pre-Aero, look and feel. Under Vista, Win7 and Win8, it will take on the appearance defined by the OS.
-* **StepWizardControl** - Extends WizardControl to include a step list that indicates current position through the flow.
+The sample wizard is rendered for every built-in appearance under `docs/screenshots`.
 
-The project is built on a number of great projects around the web on creating wizards for .NET using the old Wizard97 format. It also provides a good design-time experience so the developer can focus on the wizard function and not making it work.
+| Light | GitHub Dark |
+| --- | --- |
+| ![Light appearance](docs/screenshots/light.png) | ![GitHub Dark appearance](docs/screenshots/github-dark.png) |
 
-## Installation
-The control can be downloaded as a VSIX from [this site](https://github.com/dahall/AeroWizard/blob/master/img/AeroWizardTemplates.vsix?raw=true), as the NuGet package [Windows Forms Aero-Wizard Control](https://www.nuget.org/packages/AeroWizard/), from the [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=dahall.WindowsFormsWizardTemplates), or from within Visual Studio by adding a "New Item" to your Window Forms project, selecting Online, Templates, and searching for "Windows Forms Wizard Templates".
+| Catppuccin Mocha | High Contrast |
+| --- | --- |
+| ![Catppuccin Mocha appearance](docs/screenshots/catppuccin-mocha.png) | ![High Contrast appearance](docs/screenshots/high-contrast.png) |
 
-## Sample Code
+Additional screenshots include `system.png`, `dark.png`, `oled-black.png`, `blue-dark.png`, `catppuccin-latte.png`, `catppuccin-frappe.png`, `catppuccin-macchiato.png`, `monokai.png`, `solarized-light.png`, `solarized-dark.png`, `linear.png`, `notion.png`, `openclaw.png`, `matrix.png`, `one-dark.png`, `dracula.png`, `nord.png`, `gruvbox-dark.png`, `gruvbox-light.png`, `tokyo-night.png`, `github-light.png`, `vscode-dark-plus.png`, `visual-studio-blue.png`, `visual-studio-dark.png`, `fluent-light.png`, `fluent-dark.png`, and `windows-classic.png`.
 
-For sample code, see the [Documentation](https://github.com/dahall/AeroWizard/wiki/Documentation).
+## Install
 
-## Project Extras
+```bash
+dotnet add package AG.StepWizard --version 1.0.0
+```
 
-Some other goodies in the source code area are:
-* Class that wraps DwmEnableBlurBehindWindow and DwmExtendFrameIntoClientArea capabilities exposed by the Desktop Window Manger (DWM) allow you to create the extended glass window effect. (Native\DWM.cs)
-* Entension class for the VisualStyleRenderer class that includes a method to fix the broken GetMargins method and the ability to paint glowing text or paint theme backgrounds on glass. (Native\VisualStylesRendererExtender.cs)
-* Controls for a label and button that paint correctly on glass. (ThemedLabel.cs & ThemeImageButton.cs)
-* A fully evented generic list. (EventedList.cs)
+## Basic Usage
 
-## Visual Samples
-### Design-time Experience
-![](img/AeroWizEditVS.png)
+```csharp
+using AG.StepWizard;
 
-### Custom Example
-![](img/AeroWizCustom.png)
+var wizard = new StepWizardControl
+{
+    Dock = DockStyle.Fill,
+    HeaderTitle = "Setup",
+    HeaderSubtitle = "Complete the setup steps.",
+    Appearance = StepWizardAppearance.System
+};
 
-### Run-time Example - Windows 8
-![](img/AeroWizWin8.png)
+wizard.Pages.Add(new StepWizardPage
+{
+    Title = "Welcome",
+    Subtitle = "Start here."
+});
 
-### Run-time Example - Windows 7 / Vista
-![](img/AeroWizVista.png)
+wizard.Pages.Add(new StepWizardPage
+{
+    Title = "Finish",
+    Subtitle = "Review and finish.",
+    IsFinishPage = true
+});
 
-### Run-time Example - Windows XP (Vista style)
-![](img/AeroWizXP.png)
+wizard.PageValidating += (sender, e) =>
+{
+    // Set e.Cancel = true to stop Next or Finish.
+};
 
-### Run-time Example - Windows XP (Wizard 97 style)
-![](img/AeroWiz97.png)
+wizard.FinishButtonClick += (sender, e) =>
+{
+    MessageBox.Show("Finished.");
+};
+```
 
-## Release History
+## Appearance
 
-See the [Version History](https://github.com/dahall/AeroWizard/wiki/Version-History) page in the Wiki for a full history.
+Use `Appearance` for built-in modes:
 
-## Meta
+```csharp
+wizard.Appearance = StepWizardAppearance.Dark;
+```
 
-Distributed under the MIT license. See [LICENSE](LICENSE.md) for more information.
+Available modes:
 
-## Contributing
+- `System`: uses Windows high contrast when enabled, otherwise attempts Windows app light/dark theme detection.
+- `Light`: forces the light theme.
+- `Dark`: forces the dark theme.
+- `OLEDBlack`: forces a pure black OLED-friendly theme.
+- `BlueDark`: forces the polished blue/dark theme.
+- `CatppuccinLatte`
+- `CatppuccinFrappe`
+- `CatppuccinMacchiato`
+- `CatppuccinMocha`
+- `Monokai`
+- `SolarizedLight`
+- `SolarizedDark`
+- `Linear`
+- `Notion`
+- `OpenClaw`
+- `Matrix`
+- `OneDark`
+- `Dracula`
+- `Nord`
+- `GruvboxDark`
+- `GruvboxLight`
+- `TokyoNight`
+- `GitHubLight`
+- `GitHubDark`
+- `VSCodeDarkPlus`
+- `VisualStudioBlue`
+- `VisualStudioDark`
+- `FluentLight`
+- `FluentDark`
+- `WindowsClassic`
+- `HighContrast`: forces accessible high contrast colors and strong borders.
 
-1. Fork it (<https://github.com/yourname/yourproject/fork>)
-2. Create your feature branch (`git checkout -b feature/fooBar`)
-3. Commit your changes (`git commit -am 'Add some fooBar'`)
-4. Push to the branch (`git push origin feature/fooBar`)
-5. Create a new Pull Request
+System detection uses .NET Framework-compatible Windows registry lookup. If detection is unavailable or fails, the control safely falls back to `Light`.
+
+## Custom Theme
+
+Use `Theme` when you need exact brand colors:
+
+```csharp
+wizard.Theme = new StepWizardTheme
+{
+    Name = "Brand Light",
+    IsDark = false,
+    WindowBack = Color.WhiteSmoke,
+    ContentBack = Color.White,
+    HeaderBack = Color.White,
+    SidebarBack = Color.WhiteSmoke,
+    CardBack = Color.White,
+    Border = Color.LightGray,
+    Text = Color.Black,
+    MutedText = Color.DimGray,
+    Accent = Color.RoyalBlue,
+    AccentText = Color.White,
+    HoverBack = Color.AliceBlue,
+    SelectedBack = Color.LightBlue,
+    DisabledText = Color.Gray,
+    Success = Color.Green,
+    Warning = Color.DarkOrange,
+    Error = Color.Firebrick
+};
+```
+
+Built-in themes live in `ThemeCatalog`:
+
+```csharp
+wizard.Theme = ThemeCatalog.CatppuccinMocha;
+```
+
+Every built-in theme is defined as semantic `WizardTheme` tokens, so rendered wizard surfaces read from `WindowBack`, `ContentBack`, `HeaderBack`, `SidebarBack`, `CardBack`, `Border`, `Text`, `MutedText`, `Accent`, `AccentText`, `HoverBack`, `SelectedBack`, `DisabledText`, `Success`, `Warning`, and `Error` instead of control-specific hardcoded colors.
+
+Assigning `Appearance` after a custom `Theme` switches back to the built-in theme pipeline. Set `UseTheme = false` to use the conservative light fallback.
+
+## Page Control Theming
+
+Controls hosted inside `StepWizardPage` inherit the active theme by default:
+
+```csharp
+wizard.ThemePageControls = true;
+```
+
+The wizard recursively applies token colors to common WinForms child controls such as `Label`, `TextBox`, `ComboBox`, `ListBox`, `CheckBox`, `RadioButton`, `Button`, `Panel`, `TableLayoutPanel`, `FlowLayoutPanel`, `GroupBox`, `LinkLabel`, `TreeView`, and `ListView`. Controls added at runtime are themed as they are inserted. Set `ThemePageControls = false` when a page uses fully custom styling.
+
+## Sample App
+
+Open `src/AG.StepWizard.sln` and run `AG.StepWizard.Sample`.
+
+The sample demonstrates:
+
+- runtime appearance switching
+- four wizard pages
+- validation before Next
+- Finish and Cancel handling
+- themed header, footer, buttons, page background, borders, step list, selected step, and completed indicators
+- every built-in appearance exposed by `StepWizardAppearance`
+
+## Build
+
+Preferred .NET Framework build:
+
+```bash
+nuget restore src/AG.StepWizard.sln
+msbuild src/AG.StepWizard.sln /p:Configuration=Release
+```
+
+Pack:
+
+```bash
+dotnet pack src/AG.StepWizard/AG.StepWizard.csproj -c Release -o ./artifacts
+```
+
+Publish with NuGet Trusted Publishing from GitHub Actions:
+
+1. On nuget.org, open your account menu and choose **Trusted Publishing**.
+2. Add a GitHub Actions policy:
+   - Repository Owner: `ademgashi`
+   - Repository: `AG.StepWizard`
+   - Workflow File: `release.yml`
+   - Environment: `nuget`
+3. In GitHub, create an environment named `nuget`.
+4. In GitHub repo variables, add `NUGET_USER` with your nuget.org profile username. Use the username, not your email address.
+5. Create and publish a GitHub release, or run the `Release` workflow manually.
+
+The release workflow requests a short-lived NuGet publishing key using GitHub OIDC and `NuGet/login@v1`; no long-lived API key is stored in GitHub.
+
+Manual command-line publishing with an API key still works for unsupported workflows:
+
+```bash
+dotnet nuget push ./artifacts/AG.StepWizard.1.0.0.nupkg --api-key YOUR_NUGET_API_KEY --source https://api.nuget.org/v3/index.json
+```
+
+## Migration From AeroWizard
+
+AG.StepWizard is not a drop-in replacement for AeroWizard. It intentionally keeps only the Step Wizard-style control and renames the public API:
+
+- namespace changes to `AG.StepWizard`
+- `WizardPage` becomes `StepWizardPage`
+- `StepWizardControl` remains the main control name
+- Aero/classic wizard, Visual Styles, DWM, taskbar, VSIX templates, and generated HTML docs are removed
+- theming is controlled by `Appearance` and `StepWizardTheme`
+
+## Designer Limitations
+
+The control includes Visual Studio WinForms designer support for .NET Framework 4.7:
+
+- drag `StepWizardControl` from the toolbox onto a form
+- edit `Appearance`, `StepListWidth`, `HeaderTitle`, `HeaderSubtitle`, `ShowCancelButton`, `ShowFinishButton`, `ThemePageControls`, and other public properties in the Properties window
+- use the smart-tag actions to add/remove pages and move between pages at design time
+- edit the `Pages` collection to configure `StepWizardPage.Title`, `Subtitle`, and `IsFinishPage`
+- expand `Theme` in the Properties window to inspect/edit semantic theme tokens
+
+Complex page contents can still be built in code or added through normal WinForms designer workflows. Runtime `System` appearance detection is intentionally conservative on .NET Framework 4.7; use explicit `Appearance` values when deterministic rendering is required in the designer.
+
+## Branching
+
+This repository uses a main-based release flow with GitFlow-style branch names:
+
+- `main`: protected, release-ready, tagged versions only
+- `develop`: integration branch
+- `feature/*`: feature work
+- `fix/*`: bug fixes
+- `release/*`: release stabilization
+- `hotfix/*`: urgent fixes from `main`
+
+See `CONTRIBUTING.md` for details.
