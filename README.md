@@ -192,8 +192,7 @@ Publish with NuGet Trusted Publishing from GitHub Actions:
    - Workflow File: `release.yml`
    - Environment: `nuget`
 3. In GitHub, create an environment named `nuget`.
-4. In GitHub repo variables, add `NUGET_USER` with your nuget.org profile username. Use the username, not your email address.
-5. Create and publish a GitHub release, or run the `Release` workflow manually.
+4. Create and push a version tag such as `v1.0.0`, publish a GitHub release, or run the `Release` workflow manually.
 
 The release workflow requests a short-lived NuGet publishing key using GitHub OIDC and `NuGet/login@v1`; no long-lived API key is stored in GitHub.
 
