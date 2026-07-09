@@ -12,7 +12,6 @@ namespace AG.StepWizard
     /// </summary>
     [DefaultEvent("SelectedPageChanged")]
     [DefaultProperty("Pages")]
-    [Designer(typeof(StepWizardControlDesigner))]
     [ToolboxItem(true)]
     public class StepWizardControl : UserControl
     {
@@ -100,7 +99,6 @@ namespace AG.StepWizard
 
         /// <summary>Gets the pages hosted by the wizard.</summary>
         [DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
-        [Editor(typeof(StepWizardPageCollectionEditor), typeof(System.Drawing.Design.UITypeEditor))]
         [Category("Behavior")]
         [Description("The pages hosted by the wizard.")]
         [MergableProperty(false)]

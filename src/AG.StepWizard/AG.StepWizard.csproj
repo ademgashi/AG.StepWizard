@@ -15,15 +15,15 @@
     <RepositoryUrl>https://github.com/ademgashi/AG.StepWizard</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
     <LangVersion>latest</LangVersion>
     <NoWarn>$(NoWarn);1591</NoWarn>
+    <Title>Multi Step Wizard Control</Title>
   </PropertyGroup>
 
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
-    <Reference Include="System.Design" />
     <Reference Include="System.Drawing" />
     <Reference Include="System.Windows.Forms" />
   </ItemGroup>

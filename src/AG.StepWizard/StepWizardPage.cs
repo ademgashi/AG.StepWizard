@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.Drawing;
 using System.Windows.Forms;
-using System.Windows.Forms.Design;
 
 namespace AG.StepWizard
 {
@@ -9,7 +8,6 @@ namespace AG.StepWizard
     /// Represents a page hosted by <see cref="StepWizardControl"/>.
     /// </summary>
     [DefaultProperty("Title")]
-    [Designer(typeof(ParentControlDesigner))]
     [DesignTimeVisible(false)]
     [ToolboxItem(false)]
     public class StepWizardPage : Panel
