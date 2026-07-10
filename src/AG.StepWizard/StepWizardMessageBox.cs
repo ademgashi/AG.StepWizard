@@ -377,27 +377,35 @@ namespace AG.StepWizard
                     return;
                 }
 
-                int left = ScaleValue(18);
-                int top = ScaleValue(18);
-                if (iconView != null && iconView.Visible)
-                {
-                    int iconSize = ScaleValue(46);
-                    iconView.Bounds = new Rectangle(ScaleValue(18), top, iconSize, iconSize);
-                    iconView.BringToFront();
-                    left += iconSize + ScaleValue(14);
-                }
+                int padding = ScaleValue(20);
+                int gap = ScaleValue(16);
+                int iconSize = iconView != null && iconView.Visible ? ScaleValue(42) : 0;
+                int messageWidthForMeasure = ScaleValue(420);
+                Size preferred = TextRenderer.MeasureText(messageLabel.Text, messageLabel.Font, new Size(messageWidthForMeasure, 0), TextFormatFlags.WordBreak);
+                int contentWidth = iconSize + (iconSize > 0 ? gap : 0) + preferred.Width;
+                int desiredWidth = Math.Max(ScaleValue(420), Math.Min(ScaleValue(760), contentWidth + (padding * 2)));
+                int messageWidth = Math.Max(ScaleValue(120), desiredWidth - (padding * 2) - iconSize - (iconSize > 0 ? gap : 0));
+                preferred = TextRenderer.MeasureText(messageLabel.Text, messageLabel.Font, new Size(messageWidth, 0), TextFormatFlags.WordBreak);
 
-                messageLabel.Location = new Point(left, top);
-                messageLabel.Size = new Size(Math.Max(80, messageLabel.Parent.ClientSize.Width - left - ScaleValue(18)), Math.Max(40, messageLabel.Parent.ClientSize.Height - ScaleValue(36)));
-
-                Size preferred = TextRenderer.MeasureText(messageLabel.Text, messageLabel.Font, new Size(messageLabel.Width, 0), TextFormatFlags.WordBreak);
-                int desiredHeight = ScaleValue(44) + ScaleValue(64) + Math.Max(ScaleValue(88), preferred.Height + ScaleValue(42));
-                int desiredWidth = Math.Max(ScaleValue(420), Math.Min(ScaleValue(760), preferred.Width + left + ScaleValue(54)));
-                Size desiredSize = new Size(desiredWidth, desiredHeight);
+                int rowHeight = Math.Max(iconSize, preferred.Height);
+                int bodyHeight = Math.Max(ScaleValue(96), rowHeight + (padding * 2));
+                Size desiredSize = new Size(desiredWidth, ScaleValue(44) + ScaleValue(64) + bodyHeight);
                 if (ClientSize != desiredSize)
                 {
                     ClientSize = desiredSize;
                 }
+
+                int rowTop = Math.Max(padding, (messageLabel.Parent.ClientSize.Height - rowHeight) / 2);
+                int left = padding;
+                if (iconView != null && iconView.Visible)
+                {
+                    iconView.Bounds = new Rectangle(left, rowTop + ((rowHeight - iconSize) / 2), iconSize, iconSize);
+                    iconView.BringToFront();
+                    left += iconSize + gap;
+                }
+
+                messageLabel.Location = new Point(left, rowTop + ((rowHeight - preferred.Height) / 2));
+                messageLabel.Size = new Size(messageWidth, Math.Max(preferred.Height, ScaleValue(24)));
             }
 
             private int ScaleValue(int value)
@@ -487,12 +495,14 @@ namespace AG.StepWizard
             {
                 DrawBadge(graphics, bounds, color, true);
 
-                using (Font font = new Font(Font.FontFamily, Math.Max(16F, bounds.Height * 0.58F), FontStyle.Bold))
+                float dotSize = Math.Max(3F, bounds.Width * 0.1F);
+                Rectangle markBounds = new Rectangle(bounds.Left, bounds.Top + (int)(bounds.Height * 0.03F), bounds.Width, (int)(bounds.Height * 0.66F));
+                using (Font font = new Font(Font.FontFamily, Math.Max(16F, bounds.Height * 0.56F), FontStyle.Bold))
                 using (SolidBrush brush = new SolidBrush(color))
                 using (StringFormat format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
                 {
-                    Rectangle textBounds = new Rectangle(bounds.Left, bounds.Top - 1, bounds.Width, bounds.Height);
-                    graphics.DrawString("?", font, brush, textBounds, format);
+                    graphics.DrawString("?", font, brush, markBounds, format);
+                    graphics.FillEllipse(brush, bounds.Left + (bounds.Width - dotSize) / 2F, bounds.Bottom - bounds.Height * 0.22F, dotSize, dotSize);
                 }
             }
 
