@@ -13,6 +13,7 @@ namespace AG.StepWizard
     /// </summary>
     [DefaultEvent("SelectedPageChanged")]
     [DefaultProperty("Pages")]
+    [Designer(typeof(StepWizardControlDesigner))]
     [ToolboxItem(true)]
     public class StepWizardControl : UserControl
     {
@@ -25,7 +26,6 @@ namespace AG.StepWizard
         private readonly ThemedWizardButton nextButton;
         private readonly ThemedWizardButton finishButton;
         private readonly ThemedWizardButton cancelButton;
-        private ContextMenuStrip designMenu;
         private StepWizardAppearance appearance = StepWizardAppearance.System;
         private StepWizardTheme theme;
         private bool customThemeAssigned;
@@ -322,6 +322,26 @@ namespace AG.StepWizard
             }
         }
 
+        internal Button DesignBackButton
+        {
+            get { return backButton; }
+        }
+
+        internal Button DesignNextButton
+        {
+            get { return nextButton; }
+        }
+
+        internal Button DesignFinishButton
+        {
+            get { return finishButton; }
+        }
+
+        internal Button DesignCancelButton
+        {
+            get { return cancelButton; }
+        }
+
         internal void DetachPage(StepWizardPage page)
         {
             if (page != null)
@@ -350,42 +370,6 @@ namespace AG.StepWizard
             ApplyLayoutMetrics();
             header.Invalidate();
             stepList.Invalidate();
-        }
-
-        protected override void OnCreateControl()
-        {
-            base.OnCreateControl();
-
-            if (IsInDesignMode)
-            {
-                EnsureDesignMenu();
-            }
-        }
-
-        protected override void OnMouseDown(MouseEventArgs e)
-        {
-            if (IsInDesignMode && e.Button == MouseButtons.Left)
-            {
-                if (HitTestChildButton(backButton, e.Location))
-                {
-                    DesignPreviousPage();
-                    return;
-                }
-
-                if (HitTestChildButton(nextButton, e.Location))
-                {
-                    DesignNextPage();
-                    return;
-                }
-
-                if (HitTestChildButton(finishButton, e.Location))
-                {
-                    DesignLastPage();
-                    return;
-                }
-            }
-
-            base.OnMouseDown(e);
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -432,17 +416,6 @@ namespace AG.StepWizard
             };
             button.Click += clickHandler;
             return button;
-        }
-
-        private bool HitTestChildButton(Control button, Point point)
-        {
-            if (button == null || !button.Visible)
-            {
-                return false;
-            }
-
-            Point buttonLocation = PointToClient(button.Parent.PointToScreen(button.Location));
-            return new Rectangle(buttonLocation, button.Size).Contains(point);
         }
 
         private bool NavigateTo(int index, bool force)
@@ -715,47 +688,7 @@ namespace AG.StepWizard
             UnregisterThemePropagation(e.Control);
         }
 
-        private void EnsureDesignMenu()
-        {
-            if (designMenu != null)
-            {
-                return;
-            }
-
-            designMenu = new ContextMenuStrip();
-            designMenu.Opening += DesignMenuOpening;
-            designMenu.Items.Add("Add page", null, (sender, e) => DesignAddPage(false));
-            designMenu.Items.Add("Insert page before current", null, (sender, e) => DesignAddPage(true));
-            designMenu.Items.Add("Remove current page", null, (sender, e) => DesignRemoveSelectedPage());
-            designMenu.Items.Add(new ToolStripSeparator());
-            designMenu.Items.Add("First page", null, (sender, e) => DesignFirstPage());
-            designMenu.Items.Add("Previous page", null, (sender, e) => DesignPreviousPage());
-            designMenu.Items.Add("Next page", null, (sender, e) => DesignNextPage());
-            designMenu.Items.Add("Last page", null, (sender, e) => DesignLastPage());
-
-            if (ContextMenuStrip == null)
-            {
-                ContextMenuStrip = designMenu;
-            }
-        }
-
-        private void DesignMenuOpening(object sender, CancelEventArgs e)
-        {
-            if (designMenu == null || designMenu.Items.Count < 8)
-            {
-                return;
-            }
-
-            bool hasPages = Pages.Count > 0;
-            designMenu.Items[1].Enabled = hasPages;
-            designMenu.Items[2].Enabled = SelectedPage != null;
-            designMenu.Items[4].Enabled = hasPages;
-            designMenu.Items[5].Enabled = CanGoBack;
-            designMenu.Items[6].Enabled = CanGoNext;
-            designMenu.Items[7].Enabled = hasPages;
-        }
-
-        private void DesignAddPage(bool insertBeforeCurrent)
+        internal void DesignAddPage(bool insertBeforeCurrent)
         {
             StepWizardPage page = CreateDesignPage();
             string propertyName = "Pages";
@@ -789,7 +722,7 @@ namespace AG.StepWizard
             return page;
         }
 
-        private void DesignRemoveSelectedPage()
+        internal void DesignRemoveSelectedPage()
         {
             StepWizardPage page = SelectedPage;
             if (page == null)
@@ -814,7 +747,7 @@ namespace AG.StepWizard
             RaiseDesignChanged(propertyName);
         }
 
-        private void DesignFirstPage()
+        internal void DesignFirstPage()
         {
             if (Pages.Count > 0)
             {
@@ -822,7 +755,7 @@ namespace AG.StepWizard
             }
         }
 
-        private void DesignPreviousPage()
+        internal void DesignPreviousPage()
         {
             if (CanGoBack)
             {
@@ -830,7 +763,7 @@ namespace AG.StepWizard
             }
         }
 
-        private void DesignNextPage()
+        internal void DesignNextPage()
         {
             if (CanGoNext)
             {
@@ -838,7 +771,7 @@ namespace AG.StepWizard
             }
         }
 
-        private void DesignLastPage()
+        internal void DesignLastPage()
         {
             if (Pages.Count > 0)
             {
@@ -846,7 +779,7 @@ namespace AG.StepWizard
             }
         }
 
-        private void SetDesignSelectedPageIndex(int index)
+        internal void SetDesignSelectedPageIndex(int index)
         {
             RaiseDesignChanging("SelectedPageIndex");
             SelectedPageIndex = index;

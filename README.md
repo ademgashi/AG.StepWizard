@@ -213,16 +213,19 @@ AG.StepWizard is not a drop-in replacement for AeroWizard. It intentionally keep
 - Aero/classic wizard, Visual Styles, DWM, taskbar, VSIX templates, and generated HTML docs are removed
 - theming is controlled by `Appearance` and `StepWizardTheme`
 
-## Designer Limitations
+## Designer Support
 
-The control includes Visual Studio WinForms designer support for .NET Framework 4.7 without a `System.Design` runtime dependency:
+The control includes Visual Studio WinForms designer support for .NET Framework 4.7 through the standard `System.Design` designer assembly:
 
 - drag `StepWizardControl` from the toolbox onto a form
+- use the designer verbs or smart tag to add, insert, remove, and navigate pages
+- click the rendered Back, Next, and Finish buttons at design time to switch the selected page
+- use the `Go to page` smart-tag dropdown to jump directly to a page
 - edit `Appearance`, `StepListWidth`, `HeaderTitle`, `HeaderSubtitle`, `ShowCancelButton`, `ShowFinishButton`, `ThemePageControls`, and other public properties in the Properties window
 - expand `Theme` in the Properties window to inspect/edit semantic theme tokens
-- add pages in designer code or in your form constructor, as shown by `samples/AG.StepWizard.Sample/MainForm.Designer.cs`
+- add controls to the currently selected `StepWizardPage` through normal WinForms designer workflows
 
-Complex page contents can still be built in code or added through normal WinForms designer workflows. Runtime `System` appearance detection is intentionally conservative on .NET Framework 4.7; use explicit `Appearance` values when deterministic rendering is required in the designer.
+Runtime `System` appearance detection is intentionally conservative on .NET Framework 4.7; use explicit `Appearance` values when deterministic rendering is required in the designer.
 
 ## Branching
 

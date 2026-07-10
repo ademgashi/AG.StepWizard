@@ -8,6 +8,7 @@ namespace AG.StepWizard
     /// Represents a page hosted by <see cref="StepWizardControl"/>.
     /// </summary>
     [DefaultProperty("Title")]
+    [Designer(typeof(StepWizardPageDesigner))]
     [DesignTimeVisible(false)]
     [ToolboxItem(false)]
     public class StepWizardPage : Panel
