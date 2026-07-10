@@ -172,8 +172,7 @@ namespace AG.StepWizard
             private readonly MessageBoxIcon icon;
             private readonly MessageBoxOptions options;
             private readonly FlowLayoutPanel buttonPanel;
-            private readonly IconView iconView;
-            private readonly Label messageLabel;
+            private readonly MessageContentView messageContent;
 
             public ThemedMessageBoxForm(StepWizardTheme theme, string text, string caption, MessageBoxButtons buttons, MessageBoxIcon icon, MessageBoxDefaultButton defaultButton, MessageBoxOptions options)
             {
@@ -250,25 +249,12 @@ namespace AG.StepWizard
                     Padding = new Padding(ScaleValue(18), ScaleValue(18), ScaleValue(18), ScaleValue(18))
                 };
 
-                iconView = new IconView(theme, icon)
+                messageContent = new MessageContentView(theme, icon, text ?? string.Empty, options)
                 {
-                    Location = new Point(ScaleValue(18), ScaleValue(18)),
-                    Size = new Size(ScaleValue(42), ScaleValue(42)),
-                    Visible = HasVisibleIcon(icon)
+                    Dock = DockStyle.Fill,
+                    Font = Font
                 };
-
-                messageLabel = new Label
-                {
-                    AutoEllipsis = false,
-                    BackColor = Color.Transparent,
-                    ForeColor = theme.Text,
-                    Text = text ?? string.Empty,
-                    TextAlign = (options & MessageBoxOptions.RightAlign) == MessageBoxOptions.RightAlign ? ContentAlignment.TopRight : ContentAlignment.TopLeft
-                };
-
-                body.Controls.Add(messageLabel);
-                body.Controls.Add(iconView);
-                iconView.BringToFront();
+                body.Controls.Add(messageContent);
 
                 Controls.Add(body);
                 Controls.Add(footer);
@@ -372,89 +358,119 @@ namespace AG.StepWizard
 
             private void LayoutMessage()
             {
-                if (messageLabel == null)
+                if (messageContent == null)
                 {
                     return;
                 }
 
                 int padding = ScaleValue(20);
-                int gap = ScaleValue(16);
-                int iconSize = iconView != null && iconView.Visible ? ScaleValue(42) : 0;
-                int messageWidthForMeasure = ScaleValue(420);
-                Size preferred = TextRenderer.MeasureText(messageLabel.Text, messageLabel.Font, new Size(messageWidthForMeasure, 0), TextFormatFlags.WordBreak);
-                int contentWidth = iconSize + (iconSize > 0 ? gap : 0) + preferred.Width;
-                int desiredWidth = Math.Max(ScaleValue(420), Math.Min(ScaleValue(760), contentWidth + (padding * 2)));
-                int messageWidth = Math.Max(ScaleValue(120), desiredWidth - (padding * 2) - iconSize - (iconSize > 0 ? gap : 0));
-                preferred = TextRenderer.MeasureText(messageLabel.Text, messageLabel.Font, new Size(messageWidth, 0), TextFormatFlags.WordBreak);
-
-                int rowHeight = Math.Max(iconSize, preferred.Height);
-                int bodyHeight = Math.Max(ScaleValue(96), rowHeight + (padding * 2));
+                Size preferred = messageContent.GetPreferredContentSize(ScaleValue(460));
+                int desiredWidth = Math.Max(ScaleValue(460), Math.Min(ScaleValue(820), preferred.Width + (padding * 2)));
+                int availableContentWidth = desiredWidth - (padding * 2);
+                preferred = messageContent.GetPreferredContentSize(availableContentWidth);
+                int rowHeight = preferred.Height;
+                int bodyHeight = Math.Max(ScaleValue(108), rowHeight + (padding * 2));
                 Size desiredSize = new Size(desiredWidth, ScaleValue(44) + ScaleValue(64) + bodyHeight);
                 if (ClientSize != desiredSize)
                 {
                     ClientSize = desiredSize;
                 }
-
-                int rowTop = Math.Max(padding, (messageLabel.Parent.ClientSize.Height - rowHeight) / 2);
-                int left = padding;
-                if (iconView != null && iconView.Visible)
-                {
-                    iconView.Bounds = new Rectangle(left, rowTop + ((rowHeight - iconSize) / 2), iconSize, iconSize);
-                    iconView.BringToFront();
-                    left += iconSize + gap;
-                }
-
-                messageLabel.Location = new Point(left, rowTop + ((rowHeight - preferred.Height) / 2));
-                messageLabel.Size = new Size(messageWidth, Math.Max(preferred.Height, ScaleValue(24)));
+                messageContent.Invalidate();
             }
 
             private int ScaleValue(int value)
             {
                 return (int)Math.Round(value * DeviceDpi / 96.0);
             }
-
-            private static bool HasVisibleIcon(MessageBoxIcon icon)
-            {
-                return icon != MessageBoxIcon.None;
-            }
         }
 
-        private sealed class IconView : Control
+        private sealed class MessageContentView : Control
         {
             private readonly StepWizardTheme theme;
             private readonly MessageBoxIcon icon;
+            private readonly string message;
+            private readonly MessageBoxOptions options;
 
-            public IconView(StepWizardTheme theme, MessageBoxIcon icon)
+            public MessageContentView(StepWizardTheme theme, MessageBoxIcon icon, string message, MessageBoxOptions options)
             {
                 this.theme = theme;
                 this.icon = icon;
+                this.message = message ?? string.Empty;
+                this.options = options;
                 SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw | ControlStyles.UserPaint, true);
+            }
+
+            public Size GetPreferredContentSize(int availableWidth)
+            {
+                int iconSize = HasVisibleIcon ? ScaleValue(42) : 0;
+                int gap = iconSize > 0 ? ScaleValue(16) : 0;
+                int messageWidth = Math.Max(ScaleValue(140), availableWidth - iconSize - gap);
+                Size textSize = TextRenderer.MeasureText(message, Font, new Size(messageWidth, 0), TextFormatFlags.WordBreak);
+                return new Size(iconSize + gap + textSize.Width, Math.Max(iconSize, textSize.Height));
             }
 
             protected override void OnPaint(PaintEventArgs e)
             {
                 base.OnPaint(e);
                 e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+                e.Graphics.Clear(theme.ContentBack);
 
+                int padding = ScaleValue(20);
+                int iconSize = HasVisibleIcon ? ScaleValue(42) : 0;
+                int gap = iconSize > 0 ? ScaleValue(16) : 0;
+                int messageWidth = Math.Max(ScaleValue(120), ClientSize.Width - (padding * 2) - iconSize - gap);
+                Size textSize = TextRenderer.MeasureText(message, Font, new Size(messageWidth, 0), TextFormatFlags.WordBreak);
+                int rowHeight = Math.Max(iconSize, textSize.Height);
+                int rowTop = Math.Max(padding, (ClientSize.Height - rowHeight) / 2);
+                int left = padding;
+
+                if (HasVisibleIcon)
+                {
+                    Rectangle iconBounds = new Rectangle(left, rowTop + ((rowHeight - iconSize) / 2), iconSize, iconSize);
+                    DrawIcon(e.Graphics, iconBounds);
+                    left += iconSize + gap;
+                }
+
+                Rectangle textBounds = new Rectangle(left, rowTop + ((rowHeight - textSize.Height) / 2), messageWidth, Math.Max(textSize.Height, ScaleValue(24)));
+                TextFormatFlags flags = TextFormatFlags.WordBreak | TextFormatFlags.VerticalCenter;
+                flags |= (options & MessageBoxOptions.RightAlign) == MessageBoxOptions.RightAlign ? TextFormatFlags.Right : TextFormatFlags.Left;
+                TextRenderer.DrawText(e.Graphics, message, Font, textBounds, theme.Text, flags);
+            }
+
+            private bool HasVisibleIcon
+            {
+                get { return icon != MessageBoxIcon.None; }
+            }
+
+            private void DrawIcon(Graphics graphics, Rectangle bounds)
+            {
                 Color color = GetIconColor();
-                Rectangle bounds = new Rectangle(2, 2, Width - 5, Height - 5);
+                Rectangle iconBounds = new Rectangle(bounds.Left + 2, bounds.Top + 2, bounds.Width - 5, bounds.Height - 5);
                 switch (icon)
                 {
                     case MessageBoxIcon.Hand:
-                        DrawError(e.Graphics, bounds, color);
+                        DrawError(graphics, iconBounds, color);
                         break;
                     case MessageBoxIcon.Exclamation:
-                        DrawWarning(e.Graphics, bounds, color);
+                        DrawWarning(graphics, iconBounds, color);
                         break;
                     case MessageBoxIcon.Question:
-                        DrawQuestion(e.Graphics, bounds, color);
+                        DrawQuestion(graphics, iconBounds, color);
                         break;
                     case MessageBoxIcon.Asterisk:
-                        DrawInformation(e.Graphics, bounds, color);
+                        DrawInformation(graphics, iconBounds, color);
                         break;
                     default:
-                        DrawInformation(e.Graphics, bounds, color);
+                        DrawInformation(graphics, iconBounds, color);
                         break;
+                }
+            }
+
+            private int ScaleValue(int value)
+            {
+                using (Graphics graphics = CreateGraphics())
+                {
+                    return (int)Math.Round(value * graphics.DpiX / 96F);
                 }
             }
 
