@@ -420,19 +420,23 @@ namespace AG.StepWizard
 
                 Color color = GetIconColor();
                 Rectangle bounds = new Rectangle(2, 2, Width - 5, Height - 5);
-                using (SolidBrush brush = new SolidBrush(Color.FromArgb(28, color)))
-                using (Pen pen = new Pen(color, 2F))
+                switch (icon)
                 {
-                    e.Graphics.FillEllipse(brush, bounds);
-                    e.Graphics.DrawEllipse(pen, bounds);
-                }
-
-                string text = GetIconText();
-                using (Font font = new Font(Font.FontFamily, Math.Max(12F, Height * 0.42F), FontStyle.Bold))
-                using (SolidBrush brush = new SolidBrush(color))
-                using (StringFormat format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
-                {
-                    e.Graphics.DrawString(text, font, brush, ClientRectangle, format);
+                    case MessageBoxIcon.Hand:
+                        DrawError(e.Graphics, bounds, color);
+                        break;
+                    case MessageBoxIcon.Exclamation:
+                        DrawWarning(e.Graphics, bounds, color);
+                        break;
+                    case MessageBoxIcon.Question:
+                        DrawQuestion(e.Graphics, bounds, color);
+                        break;
+                    case MessageBoxIcon.Asterisk:
+                        DrawInformation(e.Graphics, bounds, color);
+                        break;
+                    default:
+                        DrawInformation(e.Graphics, bounds, color);
+                        break;
                 }
             }
 
@@ -447,26 +451,99 @@ namespace AG.StepWizard
                     case MessageBoxIcon.Question:
                         return theme.Accent;
                     case MessageBoxIcon.Asterisk:
-                        return theme.Success;
+                        return theme.Accent;
                     default:
                         return theme.Accent;
                 }
             }
 
-            private string GetIconText()
+            private void DrawInformation(Graphics graphics, Rectangle bounds, Color color)
             {
-                switch (icon)
+                DrawBadge(graphics, bounds, color, true);
+
+                float centerX = bounds.Left + bounds.Width / 2F;
+                float dotSize = Math.Max(3F, bounds.Width * 0.1F);
+                using (SolidBrush brush = new SolidBrush(color))
+                using (Pen pen = new Pen(color, Math.Max(2F, bounds.Width * 0.08F)))
                 {
-                    case MessageBoxIcon.Hand:
-                        return "X";
-                    case MessageBoxIcon.Exclamation:
-                        return "!";
-                    case MessageBoxIcon.Question:
-                        return "?";
-                    case MessageBoxIcon.Asterisk:
-                        return "i";
-                    default:
-                        return string.Empty;
+                    pen.StartCap = LineCap.Round;
+                    pen.EndCap = LineCap.Round;
+                    graphics.FillEllipse(brush, centerX - dotSize / 2F, bounds.Top + bounds.Height * 0.25F, dotSize, dotSize);
+                    graphics.DrawLine(pen, centerX, bounds.Top + bounds.Height * 0.43F, centerX, bounds.Bottom - bounds.Height * 0.22F);
+                }
+            }
+
+            private void DrawQuestion(Graphics graphics, Rectangle bounds, Color color)
+            {
+                DrawBadge(graphics, bounds, color, true);
+
+                using (Font font = new Font(Font.FontFamily, Math.Max(16F, bounds.Height * 0.58F), FontStyle.Bold))
+                using (SolidBrush brush = new SolidBrush(color))
+                using (StringFormat format = new StringFormat { Alignment = StringAlignment.Center, LineAlignment = StringAlignment.Center })
+                {
+                    Rectangle textBounds = new Rectangle(bounds.Left, bounds.Top - 1, bounds.Width, bounds.Height);
+                    graphics.DrawString("?", font, brush, textBounds, format);
+                }
+            }
+
+            private void DrawWarning(Graphics graphics, Rectangle bounds, Color color)
+            {
+                PointF top = new PointF(bounds.Left + bounds.Width / 2F, bounds.Top + bounds.Height * 0.09F);
+                PointF left = new PointF(bounds.Left + bounds.Width * 0.09F, bounds.Bottom - bounds.Height * 0.1F);
+                PointF right = new PointF(bounds.Right - bounds.Width * 0.09F, bounds.Bottom - bounds.Height * 0.1F);
+                using (GraphicsPath path = new GraphicsPath())
+                {
+                    path.AddPolygon(new[] { top, right, left });
+                    using (SolidBrush brush = new SolidBrush(Color.FromArgb(34, color)))
+                    using (Pen pen = new Pen(color, Math.Max(2F, bounds.Width * 0.05F)))
+                    {
+                        pen.LineJoin = LineJoin.Round;
+                        graphics.FillPath(brush, path);
+                        graphics.DrawPath(pen, path);
+                    }
+                }
+
+                float centerX = bounds.Left + bounds.Width / 2F;
+                float dotSize = Math.Max(3F, bounds.Width * 0.09F);
+                using (SolidBrush brush = new SolidBrush(color))
+                using (Pen pen = new Pen(color, Math.Max(2F, bounds.Width * 0.07F)))
+                {
+                    pen.StartCap = LineCap.Round;
+                    pen.EndCap = LineCap.Round;
+                    graphics.DrawLine(pen, centerX, bounds.Top + bounds.Height * 0.35F, centerX, bounds.Top + bounds.Height * 0.62F);
+                    graphics.FillEllipse(brush, centerX - dotSize / 2F, bounds.Bottom - bounds.Height * 0.25F, dotSize, dotSize);
+                }
+            }
+
+            private void DrawError(Graphics graphics, Rectangle bounds, Color color)
+            {
+                DrawBadge(graphics, bounds, color, true);
+
+                float inset = bounds.Width * 0.32F;
+                using (Pen pen = new Pen(color, Math.Max(3F, bounds.Width * 0.08F)))
+                {
+                    pen.StartCap = LineCap.Round;
+                    pen.EndCap = LineCap.Round;
+                    graphics.DrawLine(pen, bounds.Left + inset, bounds.Top + inset, bounds.Right - inset, bounds.Bottom - inset);
+                    graphics.DrawLine(pen, bounds.Right - inset, bounds.Top + inset, bounds.Left + inset, bounds.Bottom - inset);
+                }
+            }
+
+            private void DrawBadge(Graphics graphics, Rectangle bounds, Color color, bool circular)
+            {
+                using (SolidBrush brush = new SolidBrush(Color.FromArgb(28, color)))
+                using (Pen pen = new Pen(color, Math.Max(2F, bounds.Width * 0.05F)))
+                {
+                    if (circular)
+                    {
+                        graphics.FillEllipse(brush, bounds);
+                        graphics.DrawEllipse(pen, bounds);
+                    }
+                    else
+                    {
+                        graphics.FillRectangle(brush, bounds);
+                        graphics.DrawRectangle(pen, bounds);
+                    }
                 }
             }
         }
