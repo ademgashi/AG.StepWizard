@@ -154,10 +154,12 @@ namespace AG.StepWizard.Sample
             controlsLayout.RowCount = 6;
             controlsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             controlsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
-            for (int i = 0; i < 6; i++)
-            {
-                controlsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, i < 4 ? 48F : i == 4 ? 104F : 172F));
-            }
+            controlsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
+            controlsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
+            controlsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
+            controlsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 48F));
+            controlsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 104F));
+            controlsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, 172F));
 
             labelDemo.Text = "StepWizardLabel";
             labelDemo.Margin = new Padding(8, 8, 8, 8);
@@ -231,14 +233,26 @@ namespace AG.StepWizard.Sample
             warningTask.ProgressText = "Completed with warnings";
             warningTask.Status = StepWizardTaskStatus.Warning;
 
-            StepWizardTaskItemControl[] taskItems = { pendingTask, runningTask, completedTask, errorTask, warningTask };
-            for (int i = 0; i < taskItems.Length; i++)
-            {
-                taskItems[i].Width = 210;
-                taskItems[i].Height = 72;
-                taskItems[i].Margin = new Padding(0, 0, 8, 8);
-                taskStatesPanel.Controls.Add(taskItems[i]);
-            }
+            pendingTask.Width = 210;
+            pendingTask.Height = 72;
+            pendingTask.Margin = new Padding(0, 0, 8, 8);
+            runningTask.Width = 210;
+            runningTask.Height = 72;
+            runningTask.Margin = new Padding(0, 0, 8, 8);
+            completedTask.Width = 210;
+            completedTask.Height = 72;
+            completedTask.Margin = new Padding(0, 0, 8, 8);
+            errorTask.Width = 210;
+            errorTask.Height = 72;
+            errorTask.Margin = new Padding(0, 0, 8, 8);
+            warningTask.Width = 210;
+            warningTask.Height = 72;
+            warningTask.Margin = new Padding(0, 0, 8, 8);
+            taskStatesPanel.Controls.Add(pendingTask);
+            taskStatesPanel.Controls.Add(runningTask);
+            taskStatesPanel.Controls.Add(completedTask);
+            taskStatesPanel.Controls.Add(errorTask);
+            taskStatesPanel.Controls.Add(warningTask);
 
             controlsLayout.Controls.Add(labelDemo, 0, 0);
             controlsLayout.Controls.Add(textBoxDemo, 1, 0);
