@@ -142,27 +142,38 @@ namespace AG.StepWizard.Sample
             controlsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             for (int i = 0; i < 6; i++)
             {
-                controlsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, i < 4 ? 44F : 96F));
+                controlsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, i < 4 ? 48F : 104F));
             }
 
             labelDemo.Text = "StepWizardLabel";
+            labelDemo.Margin = new Padding(8, 8, 8, 8);
             textBoxDemo.Text = "Themed focus border";
             textBoxDemo.Width = 240;
+            textBoxDemo.Margin = new Padding(8, 4, 8, 8);
             checkBoxDemo.Text = "StepWizardCheckBox";
             checkBoxDemo.Checked = true;
+            checkBoxDemo.Size = new Size(210, 26);
+            checkBoxDemo.Margin = new Padding(8, 8, 8, 8);
             radioButtonA.Text = "StepWizardRadioButton A";
             radioButtonA.Checked = true;
+            radioButtonA.Size = new Size(230, 26);
+            radioButtonA.Margin = new Padding(8, 8, 8, 8);
             radioButtonB.Text = "StepWizardRadioButton B";
+            radioButtonB.Size = new Size(230, 26);
+            radioButtonB.Margin = new Padding(8, 8, 8, 8);
             buttonDemo.Text = "StepWizardButton";
             buttonDemo.Width = 160;
+            buttonDemo.Margin = new Padding(8, 6, 8, 8);
             buttonDemo.Click += TestButtonClick;
 
             testComboBox.Items.AddRange(new object[] { "StepWizardComboBox", "VS Code Dark+", "Catppuccin Mocha" });
             testComboBox.SelectedIndex = 0;
             testComboBox.Width = 220;
+            testComboBox.Margin = new Padding(8, 6, 8, 8);
 
             testProgressBar.Value = 68;
             testProgressBar.Width = 240;
+            testProgressBar.Margin = new Padding(8, 12, 8, 8);
             testTaskItem.Text = "Install Node.js runtime";
             testTaskItem.ProgressText = "Running preflight checks";
             testTaskItem.ShowInstallCheck = true;
@@ -175,14 +186,16 @@ namespace AG.StepWizard.Sample
             checkedListDemo.SetItemChecked(0, true);
             checkedListDemo.SetItemChecked(1, true);
             checkedListDemo.Height = 86;
-            checkedListDemo.Dock = DockStyle.Fill;
+            checkedListDemo.Width = 320;
+            checkedListDemo.Margin = new Padding(8, 4, 8, 8);
 
             listViewDemo.Columns.Add("ColumnHeader", 130);
             listViewDemo.Columns.Add("Status", 200);
             listViewDemo.Items.Add(new ListViewItem(new[] { "StepWizardListView", "Ready" }));
             listViewDemo.Items.Add(new ListViewItem(new[] { "Owner draw rows", "Themed" }));
             listViewDemo.Height = 86;
-            listViewDemo.Dock = DockStyle.Fill;
+            listViewDemo.Width = 330;
+            listViewDemo.Margin = new Padding(8, 4, 8, 8);
 
             controlsLayout.Controls.Add(labelDemo, 0, 0);
             controlsLayout.Controls.Add(textBoxDemo, 1, 0);

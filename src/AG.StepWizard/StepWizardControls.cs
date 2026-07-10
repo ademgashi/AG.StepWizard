@@ -227,20 +227,26 @@ namespace AG.StepWizard
 
         public StepWizardCheckBox()
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw | ControlStyles.UserPaint, true);
-            AutoSize = true;
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw | ControlStyles.UserPaint | ControlStyles.Opaque, true);
+            AutoSize = false;
+            Size = new Size(160, 24);
         }
 
         public void ApplyTheme(StepWizardTheme theme)
         {
             this.theme = theme ?? StepWizardTheme.Light;
-            BackColor = Color.Transparent;
+            BackColor = this.theme.ContentBack;
             ForeColor = Enabled ? this.theme.Text : this.theme.DisabledText;
             Invalidate();
         }
 
+        protected override void OnPaintBackground(PaintEventArgs pevent)
+        {
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
+            e.Graphics.Clear(BackColor);
             StepWizardPaint.PaintCheckRadio(e.Graphics, ClientRectangle, Font, Text, Checked, Enabled, false, theme);
         }
 
@@ -257,20 +263,26 @@ namespace AG.StepWizard
 
         public StepWizardRadioButton()
         {
-            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw | ControlStyles.UserPaint, true);
-            AutoSize = true;
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw | ControlStyles.UserPaint | ControlStyles.Opaque, true);
+            AutoSize = false;
+            Size = new Size(180, 24);
         }
 
         public void ApplyTheme(StepWizardTheme theme)
         {
             this.theme = theme ?? StepWizardTheme.Light;
-            BackColor = Color.Transparent;
+            BackColor = this.theme.ContentBack;
             ForeColor = Enabled ? this.theme.Text : this.theme.DisabledText;
             Invalidate();
         }
 
+        protected override void OnPaintBackground(PaintEventArgs pevent)
+        {
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
+            e.Graphics.Clear(BackColor);
             StepWizardPaint.PaintCheckRadio(e.Graphics, ClientRectangle, Font, Text, Checked, Enabled, true, theme);
         }
 
@@ -341,9 +353,12 @@ namespace AG.StepWizard
 
         protected override void OnDrawItem(DrawItemEventArgs e)
         {
-            e.DrawBackground();
             if (e.Index < 0)
             {
+                using (SolidBrush brush = new SolidBrush(theme.CardBack))
+                {
+                    e.Graphics.FillRectangle(brush, ClientRectangle);
+                }
                 return;
             }
 
@@ -440,6 +455,11 @@ namespace AG.StepWizard
                 e.Graphics.DrawRectangle(pen, e.Bounds);
             }
             TextRenderer.DrawText(e.Graphics, e.Header.Text, Font, e.Bounds, theme.MutedText, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+        }
+
+        protected override void OnDrawItem(DrawListViewItemEventArgs e)
+        {
+            e.DrawDefault = false;
         }
 
         protected override void OnDrawSubItem(DrawListViewSubItemEventArgs e)
