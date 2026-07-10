@@ -163,10 +163,13 @@ namespace AG.StepWizard.Sample
 
             testProgressBar.Value = 68;
             testProgressBar.Width = 240;
-            testTaskItem.Text = "StepWizardTaskItemControl";
-            testTaskItem.Subtitle = "Completed indicator, card, text, border";
-            testTaskItem.Completed = true;
-            testTaskItem.Width = 300;
+            testTaskItem.Text = "Install Node.js runtime";
+            testTaskItem.ProgressText = "Running preflight checks";
+            testTaskItem.ShowInstallCheck = true;
+            testTaskItem.InstallChecked = true;
+            testTaskItem.Status = StepWizardTaskStatus.Running;
+            testTaskItem.Width = 330;
+            testTaskItem.Height = 78;
 
             checkedListDemo.Items.AddRange(new object[] { "StepWizardCheckedListBox", "Checked item", "Another option" });
             checkedListDemo.SetItemChecked(0, true);
@@ -175,7 +178,7 @@ namespace AG.StepWizard.Sample
             checkedListDemo.Dock = DockStyle.Fill;
 
             listViewDemo.Columns.Add("ColumnHeader", 130);
-            listViewDemo.Columns.Add("Status", 120);
+            listViewDemo.Columns.Add("Status", 200);
             listViewDemo.Items.Add(new ListViewItem(new[] { "StepWizardListView", "Ready" }));
             listViewDemo.Items.Add(new ListViewItem(new[] { "Owner draw rows", "Themed" }));
             listViewDemo.Height = 86;

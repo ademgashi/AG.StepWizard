@@ -173,6 +173,8 @@ For full token-based rendering, use the AG companion controls:
 
 Controls implementing `IStepWizardThemeAware` are automatically themed when they are placed inside a `StepWizardPage` and `ThemePageControls` is enabled.
 
+`StepWizardTaskItemControl` provides a themed task row with `Text`, `ProgressText`, `Status`, `ShowInstallCheck`, `InstallChecked`, and `InstallCheckedChanged`. Running status is drawn with a theme-colored animated indicator, so no external GIF is required.
+
 ## Themed Dialogs
 
 `MessageBox.Show` is a native Windows dialog and cannot be reliably recolored by WinForms. Use `StepWizardMessageBox` when dialogs should match the active wizard theme:

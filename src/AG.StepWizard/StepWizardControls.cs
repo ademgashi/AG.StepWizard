@@ -243,6 +243,12 @@ namespace AG.StepWizard
         {
             StepWizardPaint.PaintCheckRadio(e.Graphics, ClientRectangle, Font, Text, Checked, Enabled, false, theme);
         }
+
+        public override Size GetPreferredSize(Size proposedSize)
+        {
+            Size textSize = TextRenderer.MeasureText(Text, Font);
+            return new Size(textSize.Width + 28, Math.Max(22, textSize.Height + 4));
+        }
     }
 
     public class StepWizardRadioButton : RadioButton, IStepWizardThemeAware
@@ -266,6 +272,12 @@ namespace AG.StepWizard
         protected override void OnPaint(PaintEventArgs e)
         {
             StepWizardPaint.PaintCheckRadio(e.Graphics, ClientRectangle, Font, Text, Checked, Enabled, true, theme);
+        }
+
+        public override Size GetPreferredSize(Size proposedSize)
+        {
+            Size textSize = TextRenderer.MeasureText(Text, Font);
+            return new Size(textSize.Width + 28, Math.Max(22, textSize.Height + 4));
         }
     }
 
@@ -315,6 +327,7 @@ namespace AG.StepWizard
         {
             DrawMode = DrawMode.OwnerDrawFixed;
             DropDownStyle = ComboBoxStyle.DropDownList;
+            FlatStyle = FlatStyle.Flat;
             ItemHeight = 22;
         }
 
@@ -342,6 +355,20 @@ namespace AG.StepWizard
                 e.Graphics.FillRectangle(brush, e.Bounds);
             }
             TextRenderer.DrawText(e.Graphics, GetItemText(Items[e.Index]), Font, e.Bounds, fore, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+        }
+
+        protected override void WndProc(ref Message m)
+        {
+            base.WndProc(ref m);
+            if (m.Msg == 0x000F)
+            {
+                using (Graphics graphics = CreateGraphics())
+                using (Pen pen = new Pen(theme.Border))
+                {
+                    Rectangle border = new Rectangle(0, 0, Width - 1, Height - 1);
+                    graphics.DrawRectangle(pen, border);
+                }
+            }
         }
     }
 
@@ -492,30 +519,103 @@ namespace AG.StepWizard
         }
     }
 
+    public enum StepWizardTaskStatus
+    {
+        Pending,
+        Running,
+        Completed,
+        Error,
+        Warning
+    }
+
     public class StepWizardTaskItemControl : Control, IStepWizardThemeAware
     {
+        private readonly Timer animationTimer;
         private StepWizardTheme theme = StepWizardTheme.Light;
-        private string subtitle = string.Empty;
-        private bool completed;
+        private string progressText = string.Empty;
+        private string installText = "Check to Install";
+        private bool installChecked;
+        private bool showInstallCheck;
+        private int animationFrame;
+        private StepWizardTaskStatus status = StepWizardTaskStatus.Pending;
 
         public StepWizardTaskItemControl()
         {
-            Size = new Size(260, 56);
+            animationTimer = new Timer { Interval = 120 };
+            animationTimer.Tick += (sender, e) =>
+            {
+                animationFrame = (animationFrame + 1) % 12;
+                Invalidate();
+            };
+            Size = new Size(350, 76);
             SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw | ControlStyles.UserPaint, true);
         }
+
+        public event EventHandler InstallCheckedChanged;
 
         [DefaultValue("")]
         public string Subtitle
         {
-            get { return subtitle; }
-            set { subtitle = value ?? string.Empty; Invalidate(); }
+            get { return progressText; }
+            set { ProgressText = value; }
+        }
+
+        [DefaultValue("")]
+        public string ProgressText
+        {
+            get { return progressText; }
+            set { progressText = value ?? string.Empty; Invalidate(); }
         }
 
         [DefaultValue(false)]
         public bool Completed
         {
-            get { return completed; }
-            set { completed = value; Invalidate(); }
+            get { return status == StepWizardTaskStatus.Completed; }
+            set { Status = value ? StepWizardTaskStatus.Completed : StepWizardTaskStatus.Pending; }
+        }
+
+        [DefaultValue(StepWizardTaskStatus.Pending)]
+        public StepWizardTaskStatus Status
+        {
+            get { return status; }
+            set
+            {
+                status = value;
+                animationFrame = 0;
+                animationTimer.Enabled = status == StepWizardTaskStatus.Running && IsHandleCreated;
+                Invalidate();
+            }
+        }
+
+        [DefaultValue(false)]
+        public bool ShowInstallCheck
+        {
+            get { return showInstallCheck; }
+            set { showInstallCheck = value; Invalidate(); }
+        }
+
+        [DefaultValue(false)]
+        public bool InstallChecked
+        {
+            get { return installChecked; }
+            set
+            {
+                if (installChecked == value)
+                {
+                    return;
+                }
+
+                installChecked = value;
+                OnInstallCheckedChanged(EventArgs.Empty);
+                Invalidate();
+            }
+        }
+
+        [DefaultValue("Check to Install")]
+        public string InstallText
+        {
+            get { return installText; }
+            set { installText = value ?? string.Empty; Invalidate(); }
         }
 
         public void ApplyTheme(StepWizardTheme theme)
@@ -524,6 +624,46 @@ namespace AG.StepWizard
             BackColor = this.theme.CardBack;
             ForeColor = Enabled ? this.theme.Text : this.theme.DisabledText;
             Invalidate();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                animationTimer.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            animationTimer.Enabled = status == StepWizardTaskStatus.Running;
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            animationTimer.Enabled = false;
+            base.OnHandleDestroyed(e);
+        }
+
+        protected override void OnClick(EventArgs e)
+        {
+            base.OnClick(e);
+            if (showInstallCheck && GetInstallCheckBounds().Contains(PointToClient(MousePosition)))
+            {
+                InstallChecked = !installChecked;
+            }
+        }
+
+        protected virtual void OnInstallCheckedChanged(EventArgs e)
+        {
+            EventHandler handler = InstallCheckedChanged;
+            if (handler != null)
+            {
+                handler(this, e);
+            }
         }
 
         protected override void OnPaint(PaintEventArgs e)
@@ -538,17 +678,70 @@ namespace AG.StepWizard
                 e.Graphics.DrawPath(pen, path);
             }
 
-            Rectangle circle = new Rectangle(12, 16, 24, 24);
-            using (SolidBrush brush = new SolidBrush(completed ? theme.Success : theme.Accent))
-            {
-                e.Graphics.FillEllipse(brush, circle);
-            }
-            TextRenderer.DrawText(e.Graphics, completed ? "v" : "*", Font, circle, theme.AccentText, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            Rectangle statusBounds = new Rectangle(12, 10, 22, 22);
+            PaintStatus(e.Graphics, statusBounds);
+
             using (Font titleFont = new Font(Font, FontStyle.Bold))
             {
-                TextRenderer.DrawText(e.Graphics, Text, titleFont, new Rectangle(46, 9, Width - 58, 22), theme.Text, TextFormatFlags.EndEllipsis);
+                TextRenderer.DrawText(e.Graphics, Text, titleFont, new Rectangle(44, 6, Width - 58, 22), theme.Text, TextFormatFlags.EndEllipsis);
             }
-            TextRenderer.DrawText(e.Graphics, subtitle, Font, new Rectangle(46, 30, Width - 58, 18), theme.MutedText, TextFormatFlags.EndEllipsis);
+
+            TextRenderer.DrawText(e.Graphics, progressText, Font, new Rectangle(44, 27, Width - 58, 18), theme.MutedText, TextFormatFlags.EndEllipsis);
+
+            if (showInstallCheck)
+            {
+                Rectangle checkBounds = GetInstallCheckBounds();
+                StepWizardPaint.PaintCheckBoxGlyph(e.Graphics, new Rectangle(checkBounds.Left, checkBounds.Top + 2, 14, 14), installChecked, Enabled, theme);
+                TextRenderer.DrawText(e.Graphics, installText, Font, new Rectangle(checkBounds.Left + 22, checkBounds.Top, Width - checkBounds.Left - 28, 20), Enabled ? theme.Text : theme.DisabledText, TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+            }
+        }
+
+        private Rectangle GetInstallCheckBounds()
+        {
+            return new Rectangle(44, 46, Math.Max(120, Width - 56), 20);
+        }
+
+        private void PaintStatus(Graphics graphics, Rectangle bounds)
+        {
+            Color color = GetStatusColor();
+            if (status == StepWizardTaskStatus.Running)
+            {
+                using (Pen basePen = new Pen(Color.FromArgb(60, color), 3F))
+                using (Pen activePen = new Pen(color, 3F))
+                {
+                    graphics.DrawEllipse(basePen, bounds);
+                    graphics.DrawArc(activePen, bounds, animationFrame * 30, 92);
+                }
+                return;
+            }
+
+            using (SolidBrush brush = new SolidBrush(color))
+            {
+                graphics.FillEllipse(brush, bounds);
+            }
+
+            string marker = status == StepWizardTaskStatus.Completed ? "v" : status == StepWizardTaskStatus.Error ? "x" : status == StepWizardTaskStatus.Warning ? "!" : string.Empty;
+            if (!string.IsNullOrEmpty(marker))
+            {
+                TextRenderer.DrawText(graphics, marker, Font, bounds, theme.AccentText, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            }
+        }
+
+        private Color GetStatusColor()
+        {
+            switch (status)
+            {
+                case StepWizardTaskStatus.Completed:
+                    return theme.Success;
+                case StepWizardTaskStatus.Error:
+                    return theme.Error;
+                case StepWizardTaskStatus.Warning:
+                    return theme.Warning;
+                case StepWizardTaskStatus.Running:
+                    return theme.Accent;
+                default:
+                    return theme.MutedText;
+            }
         }
     }
 
