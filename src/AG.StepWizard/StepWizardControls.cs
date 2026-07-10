@@ -118,6 +118,360 @@ namespace AG.StepWizard
         }
     }
 
+    public enum StepWizardActionButtonState
+    {
+        Idle,
+        Running,
+        Success,
+        Error,
+        Warning
+    }
+
+    public class StepWizardActionButton : Button, IStepWizardThemeAware
+    {
+        private readonly Timer animationTimer;
+        private bool isHovered;
+        private bool isPressed;
+        private int animationFrame;
+        private StepWizardActionButtonState state;
+        private StepWizardTheme theme = StepWizardTheme.Light;
+        private string idleText = string.Empty;
+        private string runningText = "Working...";
+        private string successText = "Succeeded";
+        private string errorText = "Failed";
+        private string warningText = "Warning";
+        private bool disableWhileRunning = true;
+
+        public StepWizardActionButton()
+        {
+            animationTimer = new Timer { Interval = 100 };
+            animationTimer.Tick += AnimationTimerTick;
+            FlatStyle = FlatStyle.Flat;
+            FlatAppearance.BorderSize = 0;
+            Size = new Size(180, 36);
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw | ControlStyles.UserPaint, true);
+        }
+
+        [DefaultValue(StepWizardActionButtonState.Idle)]
+        [Category("Behavior")]
+        public StepWizardActionButtonState State
+        {
+            get { return state; }
+            set
+            {
+                if (state == value)
+                {
+                    return;
+                }
+
+                state = value;
+                animationFrame = 0;
+                animationTimer.Enabled = state == StepWizardActionButtonState.Running && IsHandleCreated;
+                Invalidate();
+            }
+        }
+
+        [DefaultValue("")]
+        [Category("Appearance")]
+        public string IdleText
+        {
+            get { return idleText; }
+            set { idleText = value ?? string.Empty; Invalidate(); }
+        }
+
+        [DefaultValue("Working...")]
+        [Category("Appearance")]
+        public string RunningText
+        {
+            get { return runningText; }
+            set { runningText = value ?? string.Empty; Invalidate(); }
+        }
+
+        [DefaultValue("Succeeded")]
+        [Category("Appearance")]
+        public string SuccessText
+        {
+            get { return successText; }
+            set { successText = value ?? string.Empty; Invalidate(); }
+        }
+
+        [DefaultValue("Failed")]
+        [Category("Appearance")]
+        public string ErrorText
+        {
+            get { return errorText; }
+            set { errorText = value ?? string.Empty; Invalidate(); }
+        }
+
+        [DefaultValue("Warning")]
+        [Category("Appearance")]
+        public string WarningText
+        {
+            get { return warningText; }
+            set { warningText = value ?? string.Empty; Invalidate(); }
+        }
+
+        [DefaultValue(true)]
+        [Category("Behavior")]
+        public bool DisableWhileRunning
+        {
+            get { return disableWhileRunning; }
+            set { disableWhileRunning = value; Invalidate(); }
+        }
+
+        public bool IsRunning
+        {
+            get { return state == StepWizardActionButtonState.Running; }
+        }
+
+        public void BeginOperation()
+        {
+            State = StepWizardActionButtonState.Running;
+        }
+
+        public void SetSuccess()
+        {
+            State = StepWizardActionButtonState.Success;
+        }
+
+        public void SetError()
+        {
+            State = StepWizardActionButtonState.Error;
+        }
+
+        public void SetWarning()
+        {
+            State = StepWizardActionButtonState.Warning;
+        }
+
+        public void ResetState()
+        {
+            State = StepWizardActionButtonState.Idle;
+        }
+
+        public void ApplyTheme(StepWizardTheme theme)
+        {
+            this.theme = theme ?? StepWizardTheme.Light;
+            BackColor = this.theme.CardBack;
+            ForeColor = Enabled ? this.theme.Text : this.theme.DisabledText;
+            Invalidate();
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                animationTimer.Tick -= AnimationTimerTick;
+                animationTimer.Dispose();
+            }
+
+            base.Dispose(disposing);
+        }
+
+        protected override void OnHandleCreated(EventArgs e)
+        {
+            base.OnHandleCreated(e);
+            animationTimer.Enabled = state == StepWizardActionButtonState.Running;
+        }
+
+        protected override void OnHandleDestroyed(EventArgs e)
+        {
+            animationTimer.Enabled = false;
+            base.OnHandleDestroyed(e);
+        }
+
+        protected override void OnEnabledChanged(EventArgs e)
+        {
+            base.OnEnabledChanged(e);
+            Invalidate();
+        }
+
+        protected override void OnMouseEnter(EventArgs e)
+        {
+            base.OnMouseEnter(e);
+            isHovered = true;
+            Invalidate();
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            isHovered = false;
+            isPressed = false;
+            Invalidate();
+        }
+
+        protected override void OnMouseDown(MouseEventArgs mevent)
+        {
+            if (state == StepWizardActionButtonState.Running && disableWhileRunning)
+            {
+                return;
+            }
+
+            base.OnMouseDown(mevent);
+            if (mevent.Button == MouseButtons.Left)
+            {
+                isPressed = true;
+                Invalidate();
+            }
+        }
+
+        protected override void OnMouseUp(MouseEventArgs mevent)
+        {
+            base.OnMouseUp(mevent);
+            isPressed = false;
+            Invalidate();
+        }
+
+        protected override void OnClick(EventArgs e)
+        {
+            if (state == StepWizardActionButtonState.Running && disableWhileRunning)
+            {
+                return;
+            }
+
+            base.OnClick(e);
+        }
+
+        protected override void OnPaintBackground(PaintEventArgs pevent)
+        {
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            e.Graphics.Clear(Parent == null ? theme.WindowBack : Parent.BackColor);
+
+            bool effectiveEnabled = Enabled && !(state == StepWizardActionButtonState.Running && disableWhileRunning);
+            Color stateColor = GetStateColor();
+            Color back = effectiveEnabled ? theme.CardBack : theme.WindowBack;
+            if (effectiveEnabled && isPressed)
+            {
+                back = theme.SelectedBack;
+            }
+            else if (effectiveEnabled && isHovered)
+            {
+                back = theme.HoverBack;
+            }
+
+            Rectangle bounds = new Rectangle(1, 1, Width - 3, Height - 3);
+            using (GraphicsPath path = StepWizardPaint.RoundedRectangle(bounds, 6))
+            using (SolidBrush brush = new SolidBrush(back))
+            using (Pen pen = new Pen(state == StepWizardActionButtonState.Idle ? theme.Border : stateColor))
+            {
+                e.Graphics.FillPath(brush, path);
+                e.Graphics.DrawPath(pen, path);
+            }
+
+            Rectangle glyphBounds = new Rectangle(ScaleValue(12), Math.Max(ScaleValue(8), (Height - ScaleValue(18)) / 2), ScaleValue(18), ScaleValue(18));
+            PaintStateGlyph(e.Graphics, glyphBounds, stateColor, effectiveEnabled);
+
+            Rectangle textBounds = new Rectangle(glyphBounds.Right + ScaleValue(8), 0, Width - glyphBounds.Right - ScaleValue(16), Height);
+            TextRenderer.DrawText(e.Graphics, GetDisplayText(), Font, textBounds, Enabled ? theme.Text : theme.DisabledText, TextFormatFlags.Left | TextFormatFlags.VerticalCenter | TextFormatFlags.EndEllipsis);
+        }
+
+        private void AnimationTimerTick(object sender, EventArgs e)
+        {
+            animationFrame = (animationFrame + 1) % 12;
+            Invalidate();
+        }
+
+        private string GetDisplayText()
+        {
+            switch (state)
+            {
+                case StepWizardActionButtonState.Running:
+                    return runningText;
+                case StepWizardActionButtonState.Success:
+                    return successText;
+                case StepWizardActionButtonState.Error:
+                    return errorText;
+                case StepWizardActionButtonState.Warning:
+                    return warningText;
+                default:
+                    return string.IsNullOrEmpty(idleText) ? Text : idleText;
+            }
+        }
+
+        private Color GetStateColor()
+        {
+            switch (state)
+            {
+                case StepWizardActionButtonState.Running:
+                    return theme.Accent;
+                case StepWizardActionButtonState.Success:
+                    return theme.Success;
+                case StepWizardActionButtonState.Error:
+                    return theme.Error;
+                case StepWizardActionButtonState.Warning:
+                    return theme.Warning;
+                default:
+                    return theme.MutedText;
+            }
+        }
+
+        private void PaintStateGlyph(Graphics graphics, Rectangle bounds, Color color, bool effectiveEnabled)
+        {
+            Color glyphColor = effectiveEnabled || state != StepWizardActionButtonState.Idle ? color : theme.DisabledText;
+            if (state == StepWizardActionButtonState.Running)
+            {
+                using (Pen basePen = new Pen(Color.FromArgb(60, glyphColor), 2.4F))
+                using (Pen activePen = new Pen(glyphColor, 2.4F))
+                {
+                    graphics.DrawEllipse(basePen, bounds);
+                    graphics.DrawArc(activePen, bounds, animationFrame * 30, 95);
+                }
+                return;
+            }
+
+            if (state == StepWizardActionButtonState.Success)
+            {
+                StepWizardPaint.DrawCheckMark(graphics, bounds, glyphColor, 2.3F);
+                return;
+            }
+
+            if (state == StepWizardActionButtonState.Error)
+            {
+                float inset = bounds.Width * 0.27F;
+                using (Pen pen = new Pen(glyphColor, 2.3F))
+                {
+                    pen.StartCap = LineCap.Round;
+                    pen.EndCap = LineCap.Round;
+                    graphics.DrawLine(pen, bounds.Left + inset, bounds.Top + inset, bounds.Right - inset, bounds.Bottom - inset);
+                    graphics.DrawLine(pen, bounds.Right - inset, bounds.Top + inset, bounds.Left + inset, bounds.Bottom - inset);
+                }
+                return;
+            }
+
+            if (state == StepWizardActionButtonState.Warning)
+            {
+                using (Pen pen = new Pen(glyphColor, 2.2F))
+                using (SolidBrush brush = new SolidBrush(glyphColor))
+                {
+                    pen.StartCap = LineCap.Round;
+                    pen.EndCap = LineCap.Round;
+                    float centerX = bounds.Left + bounds.Width / 2F;
+                    graphics.DrawLine(pen, centerX, bounds.Top + bounds.Height * 0.22F, centerX, bounds.Top + bounds.Height * 0.62F);
+                    graphics.FillEllipse(brush, centerX - 1.6F, bounds.Bottom - bounds.Height * 0.22F, 3.2F, 3.2F);
+                }
+                return;
+            }
+
+            using (Pen pen = new Pen(glyphColor, 1.8F))
+            {
+                graphics.DrawEllipse(pen, bounds);
+            }
+        }
+
+        private int ScaleValue(int value)
+        {
+            using (Graphics graphics = CreateGraphics())
+            {
+                return (int)Math.Round(value * graphics.DpiX / 96F);
+            }
+        }
+    }
+
     [DefaultProperty("Text")]
     public class StepWizardTextBox : UserControl, IStepWizardThemeAware
     {

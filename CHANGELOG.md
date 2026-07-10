@@ -2,6 +2,12 @@
 
 All notable changes to AG.StepWizard will be documented in this file.
 
+## 1.3.0
+
+- Added `StepWizardActionButton` for long-running actions with idle, running, success, error, and warning states.
+- Added themed vector icons to `StepWizardMessageBox`.
+- Added sample controls for message-box scenarios and simulated database connection testing.
+
 ## 1.2.0
 
 - Added `StepWizardPage.Suppress` to hide optional pages from runtime Back/Next navigation and the step list while keeping them available in `Pages`.

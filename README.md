@@ -23,7 +23,7 @@ Additional screenshots include `system.png`, `dark.png`, `oled-black.png`, `blue
 ## Install
 
 ```bash
-dotnet add package AG.StepWizard --version 1.2.0
+dotnet add package AG.StepWizard --version 1.3.0
 ```
 
 ## Basic Usage
@@ -173,6 +173,7 @@ For full token-based rendering, use the AG companion controls:
 - `StepWizardRadioButton`
 - `StepWizardGroupBox`
 - `StepWizardButton`
+- `StepWizardActionButton`
 - `StepWizardCheckedListBox`
 - `StepWizardListView`
 - `StepWizardComboBox`
@@ -184,6 +185,22 @@ For full token-based rendering, use the AG companion controls:
 Controls implementing `IStepWizardThemeAware` are automatically themed when they are placed inside a `StepWizardPage` and `ThemePageControls` is enabled.
 
 `StepWizardTaskItemControl` provides a themed task row with `Text`, `ProgressText`, `Status`, `ShowInstallCheck`, `InstallChecked`, and `InstallCheckedChanged`. Running status is drawn with a theme-colored animated indicator, so no external GIF is required.
+
+`StepWizardActionButton` is useful for long operations such as testing a database connection. Set `State` to `Running` while work is in progress, then switch to `Success`, `Error`, or `Warning` when the operation completes:
+
+```csharp
+testConnectionButton.BeginOperation();
+
+try
+{
+    await TestConnectionAsync();
+    testConnectionButton.SetSuccess();
+}
+catch
+{
+    testConnectionButton.SetError();
+}
+```
 
 ## Themed Dialogs
 
@@ -240,14 +257,14 @@ Publish with NuGet Trusted Publishing from GitHub Actions:
    - Environment: `nuget`
 3. In GitHub, create an environment named `nuget`.
 4. In GitHub repo variables, add `NUGET_USER` with the nuget.org username of the person who created the Trusted Publishing policy.
-5. Create and push a version tag such as `1.2.0`, publish a GitHub release, or run the `Release` workflow manually.
+5. Create and push a version tag such as `v1.3.0`, publish a GitHub release, or run the `Release` workflow manually.
 
 The release workflow requests a short-lived NuGet publishing key using GitHub OIDC and `NuGet/login@v1`; no long-lived API key is stored in GitHub.
 
 Manual command-line publishing with an API key still works for unsupported workflows:
 
 ```bash
-dotnet nuget push ./artifacts/AG.StepWizard.1.2.0.nupkg --api-key YOUR_NUGET_API_KEY --source https://api.nuget.org/v3/index.json
+dotnet nuget push ./artifacts/AG.StepWizard.1.3.0.nupkg --api-key YOUR_NUGET_API_KEY --source https://api.nuget.org/v3/index.json
 ```
 
 ## Migration From AeroWizard

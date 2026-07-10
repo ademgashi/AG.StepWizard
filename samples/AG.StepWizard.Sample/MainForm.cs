@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace AG.StepWizard.Sample
@@ -7,6 +8,9 @@ namespace AG.StepWizard.Sample
     public sealed partial class MainForm : Form
     {
         private StepWizardLabel messageBoxResultLabel;
+        private StepWizardActionButton connectionTestButton;
+        private StepWizardLabel connectionResultLabel;
+        private int connectionAttempt;
 
         public MainForm()
         {
@@ -20,6 +24,7 @@ namespace AG.StepWizard.Sample
             wizard.FinishButtonClick += WizardFinishButtonClick;
             wizard.CancelButtonClick += WizardCancelButtonClick;
             wizard.SelectedPageChanged += WizardSelectedPageChanged;
+            CreateConnectionTestButton();
             CreateMessageBoxTestButtons();
             ApplyCompanionThemes();
         }
@@ -70,6 +75,88 @@ namespace AG.StepWizard.Sample
         private void TestButtonClick(object sender, EventArgs e)
         {
             ShowThemedMessageBox("Info", MessageBoxIcon.Information, MessageBoxButtons.OKCancel, MessageBoxDefaultButton.Button1);
+        }
+
+        private async void ConnectionTestButtonClick(object sender, EventArgs e)
+        {
+            if (connectionTestButton.IsRunning)
+            {
+                return;
+            }
+
+            connectionTestButton.BeginOperation();
+            connectionResultLabel.Text = "Testing database connection...";
+
+            try
+            {
+                await Task.Delay(1400);
+                connectionAttempt++;
+
+                if (connectionAttempt % 3 == 1)
+                {
+                    connectionTestButton.SetSuccess();
+                    connectionResultLabel.Text = "Connection succeeded. Server responded in 42 ms.";
+                }
+                else if (connectionAttempt % 3 == 2)
+                {
+                    connectionTestButton.SetError();
+                    connectionResultLabel.Text = "Connection failed. Check host name or credentials.";
+                }
+                else
+                {
+                    connectionTestButton.SetWarning();
+                    connectionResultLabel.Text = "Connection succeeded, but latency is high.";
+                }
+            }
+            catch (Exception ex)
+            {
+                connectionTestButton.SetError();
+                connectionResultLabel.Text = "Connection test failed: " + ex.Message;
+            }
+        }
+
+        private void CreateConnectionTestButton()
+        {
+            StepWizardGroupBox actionGroup = new StepWizardGroupBox
+            {
+                Dock = DockStyle.Bottom,
+                Height = 92,
+                Text = "Long operation action button",
+                Padding = new Padding(12, 20, 12, 10)
+            };
+
+            FlowLayoutPanel panel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                WrapContents = false
+            };
+
+            connectionTestButton = new StepWizardActionButton
+            {
+                Text = "Test DB connection",
+                IdleText = "Test DB connection",
+                RunningText = "Testing...",
+                SuccessText = "Connection OK",
+                ErrorText = "Connection failed",
+                WarningText = "Connection warning",
+                Width = 190,
+                Height = 34,
+                Margin = new Padding(4, 6, 12, 4)
+            };
+            connectionTestButton.Click += ConnectionTestButtonClick;
+
+            connectionResultLabel = new StepWizardLabel
+            {
+                AutoSize = true,
+                Margin = new Padding(4, 13, 4, 4),
+                Text = "Click to simulate a database connection check."
+            };
+
+            panel.Controls.Add(connectionTestButton);
+            panel.Controls.Add(connectionResultLabel);
+            actionGroup.Controls.Add(panel);
+            controlsPage.Controls.Add(actionGroup);
+            actionGroup.BringToFront();
         }
 
         private void ShowThemedMessageBox(string name, MessageBoxIcon icon, MessageBoxButtons buttons, MessageBoxDefaultButton defaultButton)
