@@ -61,9 +61,14 @@ namespace AG.StepWizard
             Invalidate();
         }
 
+        protected override void OnPaintBackground(PaintEventArgs pevent)
+        {
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            e.Graphics.PixelOffsetMode = PixelOffsetMode.Half;
 
             Color backColor = Enabled ? theme.CardBack : theme.WindowBack;
             Color foreColor = Enabled ? theme.Text : theme.DisabledText;
@@ -78,9 +83,10 @@ namespace AG.StepWizard
                 backColor = theme.HoverBack;
             }
 
-            Rectangle bounds = ClientRectangle;
-            bounds.Width -= 1;
-            bounds.Height -= 1;
+            Color parentBackColor = Parent == null ? theme.CardBack : Parent.BackColor;
+            e.Graphics.Clear(parentBackColor);
+
+            Rectangle bounds = new Rectangle(1, 1, Width - 3, Height - 3);
 
             using (GraphicsPath path = RoundedRectangle(bounds, 6))
             using (SolidBrush backBrush = new SolidBrush(backColor))

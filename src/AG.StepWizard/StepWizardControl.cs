@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel;
+using System.ComponentModel.Design;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -24,6 +25,7 @@ namespace AG.StepWizard
         private readonly ThemedWizardButton nextButton;
         private readonly ThemedWizardButton finishButton;
         private readonly ThemedWizardButton cancelButton;
+        private ContextMenuStrip designMenu;
         private StepWizardAppearance appearance = StepWizardAppearance.System;
         private StepWizardTheme theme;
         private bool customThemeAssigned;
@@ -350,6 +352,42 @@ namespace AG.StepWizard
             stepList.Invalidate();
         }
 
+        protected override void OnCreateControl()
+        {
+            base.OnCreateControl();
+
+            if (IsInDesignMode)
+            {
+                EnsureDesignMenu();
+            }
+        }
+
+        protected override void OnMouseDown(MouseEventArgs e)
+        {
+            if (IsInDesignMode && e.Button == MouseButtons.Left)
+            {
+                if (HitTestChildButton(backButton, e.Location))
+                {
+                    DesignPreviousPage();
+                    return;
+                }
+
+                if (HitTestChildButton(nextButton, e.Location))
+                {
+                    DesignNextPage();
+                    return;
+                }
+
+                if (HitTestChildButton(finishButton, e.Location))
+                {
+                    DesignLastPage();
+                    return;
+                }
+            }
+
+            base.OnMouseDown(e);
+        }
+
         protected override void OnPaint(PaintEventArgs e)
         {
             base.OnPaint(e);
@@ -362,6 +400,11 @@ namespace AG.StepWizard
                 border.Height -= 1;
                 e.Graphics.DrawRectangle(borderPen, border);
             }
+        }
+
+        private bool IsInDesignMode
+        {
+            get { return DesignMode || LicenseManager.UsageMode == LicenseUsageMode.Designtime || (Site != null && Site.DesignMode); }
         }
 
         protected override void OnSystemColorsChanged(EventArgs e)
@@ -389,6 +432,17 @@ namespace AG.StepWizard
             };
             button.Click += clickHandler;
             return button;
+        }
+
+        private bool HitTestChildButton(Control button, Point point)
+        {
+            if (button == null || !button.Visible)
+            {
+                return false;
+            }
+
+            Point buttonLocation = PointToClient(button.Parent.PointToScreen(button.Location));
+            return new Rectangle(buttonLocation, button.Size).Contains(point);
         }
 
         private bool NavigateTo(int index, bool force)
@@ -661,6 +715,162 @@ namespace AG.StepWizard
             UnregisterThemePropagation(e.Control);
         }
 
+        private void EnsureDesignMenu()
+        {
+            if (designMenu != null)
+            {
+                return;
+            }
+
+            designMenu = new ContextMenuStrip();
+            designMenu.Opening += DesignMenuOpening;
+            designMenu.Items.Add("Add page", null, (sender, e) => DesignAddPage(false));
+            designMenu.Items.Add("Insert page before current", null, (sender, e) => DesignAddPage(true));
+            designMenu.Items.Add("Remove current page", null, (sender, e) => DesignRemoveSelectedPage());
+            designMenu.Items.Add(new ToolStripSeparator());
+            designMenu.Items.Add("First page", null, (sender, e) => DesignFirstPage());
+            designMenu.Items.Add("Previous page", null, (sender, e) => DesignPreviousPage());
+            designMenu.Items.Add("Next page", null, (sender, e) => DesignNextPage());
+            designMenu.Items.Add("Last page", null, (sender, e) => DesignLastPage());
+
+            if (ContextMenuStrip == null)
+            {
+                ContextMenuStrip = designMenu;
+            }
+        }
+
+        private void DesignMenuOpening(object sender, CancelEventArgs e)
+        {
+            if (designMenu == null || designMenu.Items.Count < 8)
+            {
+                return;
+            }
+
+            bool hasPages = Pages.Count > 0;
+            designMenu.Items[1].Enabled = hasPages;
+            designMenu.Items[2].Enabled = SelectedPage != null;
+            designMenu.Items[4].Enabled = hasPages;
+            designMenu.Items[5].Enabled = CanGoBack;
+            designMenu.Items[6].Enabled = CanGoNext;
+            designMenu.Items[7].Enabled = hasPages;
+        }
+
+        private void DesignAddPage(bool insertBeforeCurrent)
+        {
+            StepWizardPage page = CreateDesignPage();
+            string propertyName = "Pages";
+            RaiseDesignChanging(propertyName);
+
+            if (insertBeforeCurrent && selectedPageIndex >= 0 && selectedPageIndex < Pages.Count)
+            {
+                Pages.Insert(selectedPageIndex, page);
+            }
+            else
+            {
+                Pages.Add(page);
+                selectedPageIndex = Pages.Count - 1;
+            }
+
+            SelectedPage = page;
+            RaiseDesignChanged(propertyName);
+        }
+
+        private StepWizardPage CreateDesignPage()
+        {
+            IDesignerHost host = Site == null ? null : Site.GetService(typeof(IDesignerHost)) as IDesignerHost;
+            StepWizardPage page = host == null ? new StepWizardPage() : host.CreateComponent(typeof(StepWizardPage)) as StepWizardPage;
+            if (page == null)
+            {
+                page = new StepWizardPage();
+            }
+
+            page.Title = "Step " + (Pages.Count + 1);
+            page.Subtitle = "Describe this step.";
+            return page;
+        }
+
+        private void DesignRemoveSelectedPage()
+        {
+            StepWizardPage page = SelectedPage;
+            if (page == null)
+            {
+                return;
+            }
+
+            string propertyName = "Pages";
+            RaiseDesignChanging(propertyName);
+            Pages.Remove(page);
+
+            IDesignerHost host = Site == null ? null : Site.GetService(typeof(IDesignerHost)) as IDesignerHost;
+            if (host != null && page.Site != null)
+            {
+                host.DestroyComponent(page);
+            }
+            else
+            {
+                page.Dispose();
+            }
+
+            RaiseDesignChanged(propertyName);
+        }
+
+        private void DesignFirstPage()
+        {
+            if (Pages.Count > 0)
+            {
+                SetDesignSelectedPageIndex(0);
+            }
+        }
+
+        private void DesignPreviousPage()
+        {
+            if (CanGoBack)
+            {
+                SetDesignSelectedPageIndex(selectedPageIndex - 1);
+            }
+        }
+
+        private void DesignNextPage()
+        {
+            if (CanGoNext)
+            {
+                SetDesignSelectedPageIndex(selectedPageIndex + 1);
+            }
+        }
+
+        private void DesignLastPage()
+        {
+            if (Pages.Count > 0)
+            {
+                SetDesignSelectedPageIndex(Pages.Count - 1);
+            }
+        }
+
+        private void SetDesignSelectedPageIndex(int index)
+        {
+            RaiseDesignChanging("SelectedPageIndex");
+            SelectedPageIndex = index;
+            RaiseDesignChanged("SelectedPageIndex");
+        }
+
+        private void RaiseDesignChanging(string propertyName)
+        {
+            IComponentChangeService service = Site == null ? null : Site.GetService(typeof(IComponentChangeService)) as IComponentChangeService;
+            if (service != null)
+            {
+                service.OnComponentChanging(this, TypeDescriptor.GetProperties(this)[propertyName]);
+            }
+        }
+
+        private void RaiseDesignChanged(string propertyName)
+        {
+            IComponentChangeService service = Site == null ? null : Site.GetService(typeof(IComponentChangeService)) as IComponentChangeService;
+            if (service != null)
+            {
+                service.OnComponentChanged(this, TypeDescriptor.GetProperties(this)[propertyName], null, null);
+            }
+        }
+
         private StepWizardTheme ResolveTheme()
         {
             StepWizardAppearance resolved = appearance;
@@ -798,18 +1008,36 @@ namespace AG.StepWizard
 
         private void BackButtonClickCore(object sender, EventArgs e)
         {
+            if (IsInDesignMode)
+            {
+                DesignPreviousPage();
+                return;
+            }
+
             OnBackButtonClick(EventArgs.Empty);
             GoBack();
         }
 
         private void NextButtonClickCore(object sender, EventArgs e)
         {
+            if (IsInDesignMode)
+            {
+                DesignNextPage();
+                return;
+            }
+
             OnNextButtonClick(EventArgs.Empty);
             GoNext();
         }
 
         private void FinishButtonClickCore(object sender, EventArgs e)
         {
+            if (IsInDesignMode)
+            {
+                DesignLastPage();
+                return;
+            }
+
             if (ValidateSelectedPage())
             {
                 OnFinishButtonClick(EventArgs.Empty);
