@@ -137,14 +137,14 @@ namespace AG.StepWizard
         [Browsable(false)]
         public bool CanGoBack
         {
-            get { return selectedPageIndex > 0; }
+            get { return GetPreviousPageIndex(selectedPageIndex) >= 0; }
         }
 
         /// <summary>Gets whether Next navigation is available.</summary>
         [Browsable(false)]
         public bool CanGoNext
         {
-            get { return selectedPageIndex >= 0 && selectedPageIndex < Pages.Count - 1; }
+            get { return GetNextPageIndex(selectedPageIndex) >= 0; }
         }
 
         /// <summary>Gets whether the selected page is the finish page.</summary>
@@ -154,7 +154,7 @@ namespace AG.StepWizard
             get
             {
                 StepWizardPage page = SelectedPage;
-                return page != null && (page.IsFinishPage || selectedPageIndex == Pages.Count - 1);
+                return page != null && (page.IsFinishPage || GetNextPageIndex(selectedPageIndex) < 0);
             }
         }
 
@@ -284,7 +284,8 @@ namespace AG.StepWizard
         /// <summary>Moves to the previous page.</summary>
         public bool GoBack()
         {
-            return CanGoBack && NavigateTo(selectedPageIndex - 1, false);
+            int previousIndex = GetPreviousPageIndex(selectedPageIndex);
+            return previousIndex >= 0 && NavigateTo(previousIndex, false);
         }
 
         /// <summary>Moves to the next page after validation.</summary>
@@ -295,7 +296,8 @@ namespace AG.StepWizard
                 return false;
             }
 
-            return NavigateTo(selectedPageIndex + 1, false);
+            int nextIndex = GetNextPageIndex(selectedPageIndex);
+            return nextIndex >= 0 && NavigateTo(nextIndex, false);
         }
 
         internal void AttachPage(StepWizardPage page)
@@ -307,13 +309,14 @@ namespace AG.StepWizard
 
             page.Visible = false;
             page.Dock = DockStyle.Fill;
+            page.Owner = this;
             pageHost.Controls.Add(page);
             RegisterThemePropagation(page);
             ApplyThemeToPage(page, CurrentTheme);
 
             if (selectedPageIndex == -1)
             {
-                NavigateTo(0, true);
+                NavigateTo(GetInitialPageIndex(), true);
             }
             else
             {
@@ -347,6 +350,7 @@ namespace AG.StepWizard
             if (page != null)
             {
                 UnregisterThemePropagation(page);
+                page.Owner = null;
                 pageHost.Controls.Remove(page);
             }
 
@@ -356,7 +360,11 @@ namespace AG.StepWizard
             }
             else if (selectedPageIndex >= Pages.Count)
             {
-                selectedPageIndex = Pages.Count - 1;
+                selectedPageIndex = GetLastPageIndex();
+            }
+            else if (!IsInDesignMode && IsPageSuppressed(selectedPageIndex))
+            {
+                selectedPageIndex = GetNearestVisiblePageIndex(selectedPageIndex);
             }
 
             ShowSelectedPage();
@@ -406,6 +414,58 @@ namespace AG.StepWizard
             get { return useTheme ? theme : StepWizardTheme.Light; }
         }
 
+        private int GetInitialPageIndex()
+        {
+            return IsInDesignMode ? 0 : GetNextPageIndex(-1);
+        }
+
+        private int GetLastPageIndex()
+        {
+            return IsInDesignMode ? Pages.Count - 1 : GetPreviousPageIndex(Pages.Count);
+        }
+
+        private int GetNearestVisiblePageIndex(int index)
+        {
+            int nextIndex = GetNextPageIndex(index);
+            if (nextIndex >= 0)
+            {
+                return nextIndex;
+            }
+
+            return GetPreviousPageIndex(index);
+        }
+
+        private int GetPreviousPageIndex(int index)
+        {
+            for (int i = Math.Min(index - 1, Pages.Count - 1); i >= 0; i--)
+            {
+                if (!IsPageSuppressed(i))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private int GetNextPageIndex(int index)
+        {
+            for (int i = Math.Max(index + 1, 0); i < Pages.Count; i++)
+            {
+                if (!IsPageSuppressed(i))
+                {
+                    return i;
+                }
+            }
+
+            return -1;
+        }
+
+        private bool IsPageSuppressed(int index)
+        {
+            return index >= 0 && index < Pages.Count && Pages[index].Suppress;
+        }
+
         private ThemedWizardButton CreateButton(string text, EventHandler clickHandler)
         {
             ThemedWizardButton button = new ThemedWizardButton
@@ -425,6 +485,16 @@ namespace AG.StepWizard
                 return false;
             }
 
+            if (!IsInDesignMode && IsPageSuppressed(index))
+            {
+                index = GetNearestVisiblePageIndex(index);
+
+                if (index < 0)
+                {
+                    return false;
+                }
+            }
+
             StepWizardPage currentPage = SelectedPage;
             StepWizardPage nextPage = index >= 0 ? Pages[index] : null;
             StepWizardPageChangingEventArgs changing = new StepWizardPageChangingEventArgs(currentPage, nextPage, selectedPageIndex, index);
@@ -441,6 +511,26 @@ namespace AG.StepWizard
             stepList.Invalidate();
             OnSelectedPageChanged(new StepWizardPageChangedEventArgs(SelectedPage, selectedPageIndex));
             return true;
+        }
+
+        internal void OnPageFlowChanged(StepWizardPage page)
+        {
+            if (page == null || !Pages.Contains(page))
+            {
+                return;
+            }
+
+            if (!IsInDesignMode && page.Suppress && Pages.IndexOf(page) == selectedPageIndex)
+            {
+                int nextIndex = GetNextPageIndex(selectedPageIndex);
+                NavigateTo(nextIndex >= 0 ? nextIndex : GetPreviousPageIndex(selectedPageIndex), true);
+            }
+            else
+            {
+                UpdateHeader();
+                UpdateButtons();
+                stepList.Invalidate();
+            }
         }
 
         private void ShowSelectedPage()
@@ -764,7 +854,7 @@ namespace AG.StepWizard
 
         internal void DesignPreviousPage()
         {
-            if (CanGoBack)
+            if (selectedPageIndex > 0)
             {
                 SetDesignSelectedPageIndex(selectedPageIndex - 1);
             }
@@ -772,7 +862,7 @@ namespace AG.StepWizard
 
         internal void DesignNextPage()
         {
-            if (CanGoNext)
+            if (selectedPageIndex >= 0 && selectedPageIndex < Pages.Count - 1)
             {
                 SetDesignSelectedPageIndex(selectedPageIndex + 1);
             }
@@ -1127,9 +1217,15 @@ namespace AG.StepWizard
                     e.Graphics.DrawLine(borderPen, Width - 1, 0, Width - 1, Height);
                 }
 
+                int visibleStepNumber = 1;
                 for (int i = 0; i < owner.Pages.Count; i++)
                 {
                     StepWizardPage page = owner.Pages[i];
+                    if (page.Suppress)
+                    {
+                        continue;
+                    }
+
                     Rectangle itemBounds = new Rectangle(Padding.Left / 2, y - ScaleValue(6), Width - Padding.Horizontal / 2 - ScaleValue(8), itemHeight);
                     bool selected = i == owner.selectedPageIndex;
                     bool completed = owner.selectedPageIndex > i;
@@ -1144,11 +1240,11 @@ namespace AG.StepWizard
                     }
 
                     Rectangle circleBounds = new Rectangle(x, y + ScaleValue(8), circleSize, circleSize);
-                    DrawCircle(e.Graphics, circleBounds, i + 1, completed, selected);
+                    DrawCircle(e.Graphics, circleBounds, visibleStepNumber, completed, selected);
 
                     Color titleColor = selected ? theme.AccentText : theme.Text;
                     Color mutedColor = selected ? theme.AccentText : theme.MutedText;
-                    string title = string.IsNullOrWhiteSpace(page.Title) ? "Step " + (i + 1) : page.Title;
+                    string title = string.IsNullOrWhiteSpace(page.Title) ? "Step " + visibleStepNumber : page.Title;
                     string subtitle = completed ? "Completed" : (selected ? "Current step" : "Pending");
                     Rectangle titleBounds = new Rectangle(textX, y + ScaleValue(6), Width - textX - ScaleValue(12), ScaleValue(22));
                     Rectangle subtitleBounds = new Rectangle(textX, y + ScaleValue(30), Width - textX - ScaleValue(12), ScaleValue(20));
@@ -1160,6 +1256,7 @@ namespace AG.StepWizard
 
                     TextRenderer.DrawText(e.Graphics, subtitle, Font, subtitleBounds, mutedColor, TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
                     y += itemHeight;
+                    visibleStepNumber++;
                 }
             }
 

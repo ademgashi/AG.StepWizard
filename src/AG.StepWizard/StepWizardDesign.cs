@@ -220,7 +220,7 @@ namespace AG.StepWizard
         internal void PreviousPage()
         {
             StepWizardControl wizard = Wizard;
-            if (wizard != null && wizard.CanGoBack)
+            if (wizard != null && wizard.SelectedPageIndex > 0)
             {
                 SelectPage(wizard.SelectedPageIndex - 1);
             }
@@ -229,7 +229,7 @@ namespace AG.StepWizard
         internal void NextPage()
         {
             StepWizardControl wizard = Wizard;
-            if (wizard != null && wizard.CanGoNext)
+            if (wizard != null && wizard.SelectedPageIndex >= 0 && wizard.SelectedPageIndex < wizard.Pages.Count - 1)
             {
                 SelectPage(wizard.SelectedPageIndex + 1);
             }
@@ -332,8 +332,8 @@ namespace AG.StepWizard
             verbs[1].Enabled = hasPages;
             verbs[2].Enabled = Wizard.SelectedPage != null;
             verbs[3].Enabled = hasPages;
-            verbs[4].Enabled = Wizard.CanGoBack;
-            verbs[5].Enabled = Wizard.CanGoNext;
+            verbs[4].Enabled = Wizard.SelectedPageIndex > 0;
+            verbs[5].Enabled = Wizard.SelectedPageIndex >= 0 && Wizard.SelectedPageIndex < Wizard.Pages.Count - 1;
             verbs[6].Enabled = hasPages;
         }
 
@@ -418,17 +418,20 @@ namespace AG.StepWizard
                 items.Add(new DesignerActionPropertyItem("Pages", "Edit pages...", "Pages", "Open the page collection editor."));
             }
 
-            if (Wizard.CanGoBack || Wizard.CanGoNext)
+            bool canGoBack = Wizard.SelectedPageIndex > 0;
+            bool canGoNext = Wizard.SelectedPageIndex >= 0 && Wizard.SelectedPageIndex < Wizard.Pages.Count - 1;
+
+            if (canGoBack || canGoNext)
             {
                 items.Add(new DesignerActionHeaderItem("Navigation"));
             }
 
-            if (Wizard.CanGoBack)
+            if (canGoBack)
             {
                 items.Add(new DesignerActionMethodItem(this, "PreviousPage", "Previous page", "Navigation", "Show the previous page.", false));
             }
 
-            if (Wizard.CanGoNext)
+            if (canGoNext)
             {
                 items.Add(new DesignerActionMethodItem(this, "NextPage", "Next page", "Navigation", "Show the next page.", false));
             }

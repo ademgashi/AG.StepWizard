@@ -10,6 +10,8 @@ namespace AG.StepWizard.Sample
         private StepWizardComboBox appearanceCombo;
         private StepWizardTextBox nameTextBox;
         private StepWizardCheckBox requirementsCheckBox;
+        private StepWizardCheckBox showControlsStepCheckBox;
+        private StepWizardPage controlsPage;
         private StepWizardListView summaryList;
         private StepWizardToolTip themedToolTip;
         private StepWizardComboBox testComboBox;
@@ -32,6 +34,7 @@ namespace AG.StepWizard.Sample
             appearanceCombo = new StepWizardComboBox();
             nameTextBox = new StepWizardTextBox();
             requirementsCheckBox = new StepWizardCheckBox();
+            showControlsStepCheckBox = new StepWizardCheckBox();
             summaryList = new StepWizardListView();
             themedToolTip = new StepWizardToolTip();
             testComboBox = new StepWizardComboBox();
@@ -42,7 +45,7 @@ namespace AG.StepWizard.Sample
             StepWizardPage welcomePage = new StepWizardPage();
             StepWizardPage detailsPage = new StepWizardPage();
             StepWizardPage requirementsPage = new StepWizardPage();
-            StepWizardPage controlsPage = new StepWizardPage();
+            controlsPage = new StepWizardPage();
             StepWizardPage reviewPage = new StepWizardPage();
             StepWizardLabel welcomeText = new StepWizardLabel();
             TableLayoutPanel detailsLayout = new TableLayoutPanel();
@@ -131,6 +134,13 @@ namespace AG.StepWizard.Sample
             requirementsCheckBox.Left = 24;
             requirementsCheckBox.Text = "I confirmed the deployment requirements and support contact.";
             requirementsCheckBox.Top = 80;
+            showControlsStepCheckBox.AutoSize = true;
+            showControlsStepCheckBox.Checked = true;
+            showControlsStepCheckBox.Left = 24;
+            showControlsStepCheckBox.Text = "Show the optional themed controls step.";
+            showControlsStepCheckBox.Top = 112;
+            showControlsStepCheckBox.CheckedChanged += ShowControlsStepCheckBoxCheckedChanged;
+            requirementsPage.Controls.Add(showControlsStepCheckBox);
             requirementsPage.Controls.Add(requirementsCheckBox);
             requirementsPage.Controls.Add(requirementsText);
 
@@ -259,6 +269,7 @@ namespace AG.StepWizard.Sample
             summaryList.Items.Add(new ListViewItem(new[] { "Owner", "Adem Gashi" }));
             summaryList.Items.Add(new ListViewItem(new[] { "Requirements confirmed", "no" }));
             summaryList.Items.Add(new ListViewItem(new[] { "Appearance", "System" }));
+            summaryList.Items.Add(new ListViewItem(new[] { "Themed controls step", "shown" }));
             reviewPage.Controls.Add(summaryList);
 
             wizard.Pages.Add(welcomePage);

@@ -23,7 +23,7 @@ Additional screenshots include `system.png`, `dark.png`, `oled-black.png`, `blue
 ## Install
 
 ```bash
-dotnet add package AG.StepWizard --version 1.0.0
+dotnet add package AG.StepWizard --version 1.2.0
 ```
 
 ## Basic Usage
@@ -62,6 +62,16 @@ wizard.FinishButtonClick += (sender, e) =>
     StepWizardMessageBox.Show(wizard, "Finished.", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
 };
 ```
+
+## Optional Pages
+
+Use `StepWizardPage.Suppress` to keep a page in `Pages` while hiding it from the runtime flow:
+
+```csharp
+threeServerPage.Suppress = installMode == InstallMode.SingleServer;
+```
+
+Suppressed pages are skipped by Back and Next, hidden from the left step list, and ignored when deciding whether the selected page should show Finish. The page remains in the collection so code can turn it back on later, and the Visual Studio designer can still select it from the smart tag or page collection editor.
 
 ## Appearance
 
@@ -198,7 +208,8 @@ Open `src/AG.StepWizard.sln` and run `AG.StepWizard.Sample`.
 The sample demonstrates:
 
 - runtime appearance switching
-- four wizard pages
+- optional page suppression
+- five wizard pages
 - validation before Next
 - Finish and Cancel handling
 - themed header, footer, buttons, page background, borders, step list, selected step, and completed indicators
@@ -229,14 +240,14 @@ Publish with NuGet Trusted Publishing from GitHub Actions:
    - Environment: `nuget`
 3. In GitHub, create an environment named `nuget`.
 4. In GitHub repo variables, add `NUGET_USER` with the nuget.org username of the person who created the Trusted Publishing policy.
-5. Create and push a version tag such as `v1.0.0`, publish a GitHub release, or run the `Release` workflow manually.
+5. Create and push a version tag such as `1.2.0`, publish a GitHub release, or run the `Release` workflow manually.
 
 The release workflow requests a short-lived NuGet publishing key using GitHub OIDC and `NuGet/login@v1`; no long-lived API key is stored in GitHub.
 
 Manual command-line publishing with an API key still works for unsupported workflows:
 
 ```bash
-dotnet nuget push ./artifacts/AG.StepWizard.1.0.0.nupkg --api-key YOUR_NUGET_API_KEY --source https://api.nuget.org/v3/index.json
+dotnet nuget push ./artifacts/AG.StepWizard.1.2.0.nupkg --api-key YOUR_NUGET_API_KEY --source https://api.nuget.org/v3/index.json
 ```
 
 ## Migration From AeroWizard
@@ -245,6 +256,7 @@ AG.StepWizard is not a drop-in replacement for AeroWizard. It intentionally keep
 
 - namespace changes to `AG.StepWizard`
 - `WizardPage` becomes `StepWizardPage`
+- AeroWizard-style page suppression maps to `StepWizardPage.Suppress`
 - `StepWizardControl` remains the main control name
 - Aero/classic wizard, Visual Styles, DWM, taskbar, VSIX templates, and generated HTML docs are removed
 - theming is controlled by `Appearance` and `StepWizardTheme`

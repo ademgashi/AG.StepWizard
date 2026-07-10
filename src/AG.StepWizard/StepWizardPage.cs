@@ -13,6 +13,8 @@ namespace AG.StepWizard
     [ToolboxItem(false)]
     public class StepWizardPage : Panel
     {
+        private bool suppress;
+
         public StepWizardPage()
         {
             AutoScroll = true;
@@ -34,6 +36,30 @@ namespace AG.StepWizard
         [DefaultValue(false)]
         [Category("Behavior")]
         public bool IsFinishPage { get; set; }
+
+        /// <summary>Gets or sets whether this page is hidden from the wizard navigation flow.</summary>
+        [DefaultValue(false)]
+        [Category("Behavior")]
+        [Description("When true, Back and Next skip this page and the step list hides it. The page remains in Pages for code and designer editing.")]
+        public bool Suppress
+        {
+            get { return suppress; }
+            set
+            {
+                if (suppress == value)
+                {
+                    return;
+                }
+
+                suppress = value;
+                if (Owner != null)
+                {
+                    Owner.OnPageFlowChanged(this);
+                }
+            }
+        }
+
+        internal StepWizardControl Owner { get; set; }
 
         public override string ToString()
         {

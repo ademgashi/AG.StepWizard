@@ -68,6 +68,12 @@ namespace AG.StepWizard.Sample
             StepWizardMessageBox.Show(this, wizard.Theme, "This dialog is rendered by StepWizardMessageBox and uses the current appearance tokens.", "Themed Dialog", MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1);
         }
 
+        private void ShowControlsStepCheckBoxCheckedChanged(object sender, EventArgs e)
+        {
+            controlsPage.Suppress = !showControlsStepCheckBox.Checked;
+            UpdateSummary();
+        }
+
         private void ApplyCompanionThemes()
         {
             themedToolTip.ApplyTheme(wizard.Theme);
@@ -79,6 +85,7 @@ namespace AG.StepWizard.Sample
             SetSummaryValue(1, "Adem Gashi");
             SetSummaryValue(2, requirementsCheckBox.Checked ? "yes" : "no");
             SetSummaryValue(3, wizard.Appearance.ToString());
+            SetSummaryValue(4, showControlsStepCheckBox.Checked ? "shown" : "suppressed");
         }
 
         private void SetSummaryValue(int index, string value)
