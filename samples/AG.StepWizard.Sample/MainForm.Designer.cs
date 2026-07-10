@@ -14,7 +14,6 @@ namespace AG.StepWizard.Sample
         private StepWizardToolTip themedToolTip;
         private StepWizardComboBox testComboBox;
         private StepWizardProgressBar testProgressBar;
-        private StepWizardTaskItemControl testTaskItem;
 
         protected override void Dispose(bool disposing)
         {
@@ -37,7 +36,6 @@ namespace AG.StepWizard.Sample
             themedToolTip = new StepWizardToolTip();
             testComboBox = new StepWizardComboBox();
             testProgressBar = new StepWizardProgressBar();
-            testTaskItem = new StepWizardTaskItemControl();
 
             StepWizardLabel appearanceLabel = new StepWizardLabel();
             FlowLayoutPanel toolbar = new FlowLayoutPanel();
@@ -62,6 +60,12 @@ namespace AG.StepWizard.Sample
             StepWizardButton buttonDemo = new StepWizardButton();
             StepWizardCheckedListBox checkedListDemo = new StepWizardCheckedListBox();
             StepWizardListView listViewDemo = new StepWizardListView();
+            FlowLayoutPanel taskStatesPanel = new FlowLayoutPanel();
+            StepWizardTaskItemControl pendingTask = new StepWizardTaskItemControl();
+            StepWizardTaskItemControl runningTask = new StepWizardTaskItemControl();
+            StepWizardTaskItemControl completedTask = new StepWizardTaskItemControl();
+            StepWizardTaskItemControl errorTask = new StepWizardTaskItemControl();
+            StepWizardTaskItemControl warningTask = new StepWizardTaskItemControl();
 
             SuspendLayout();
 
@@ -142,7 +146,7 @@ namespace AG.StepWizard.Sample
             controlsLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 50F));
             for (int i = 0; i < 6; i++)
             {
-                controlsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, i < 4 ? 48F : 104F));
+                controlsLayout.RowStyles.Add(new RowStyle(SizeType.Absolute, i < 4 ? 48F : i == 4 ? 104F : 172F));
             }
 
             labelDemo.Text = "StepWizardLabel";
@@ -174,13 +178,6 @@ namespace AG.StepWizard.Sample
             testProgressBar.Value = 68;
             testProgressBar.Width = 240;
             testProgressBar.Margin = new Padding(8, 12, 8, 8);
-            testTaskItem.Text = "Install Node.js runtime";
-            testTaskItem.ProgressText = "Running preflight checks";
-            testTaskItem.ShowInstallCheck = true;
-            testTaskItem.InstallChecked = true;
-            testTaskItem.Status = StepWizardTaskStatus.Running;
-            testTaskItem.Width = 330;
-            testTaskItem.Height = 78;
 
             checkedListDemo.Items.AddRange(new object[] { "StepWizardCheckedListBox", "Checked item", "Another option" });
             checkedListDemo.SetItemChecked(0, true);
@@ -197,6 +194,42 @@ namespace AG.StepWizard.Sample
             listViewDemo.Width = 330;
             listViewDemo.Margin = new Padding(8, 4, 8, 8);
 
+            taskStatesPanel.AutoSize = true;
+            taskStatesPanel.Dock = DockStyle.Fill;
+            taskStatesPanel.Margin = new Padding(8, 4, 8, 8);
+            taskStatesPanel.WrapContents = true;
+
+            pendingTask.Text = "Pending task";
+            pendingTask.ProgressText = "Waiting to start";
+            pendingTask.Status = StepWizardTaskStatus.Pending;
+
+            runningTask.Text = "Running task";
+            runningTask.ProgressText = "Animated themed spinner";
+            runningTask.Status = StepWizardTaskStatus.Running;
+            runningTask.ShowInstallCheck = true;
+            runningTask.InstallChecked = true;
+
+            completedTask.Text = "Finished task";
+            completedTask.ProgressText = "Completed successfully";
+            completedTask.Status = StepWizardTaskStatus.Completed;
+
+            errorTask.Text = "Failed task";
+            errorTask.ProgressText = "Install step failed";
+            errorTask.Status = StepWizardTaskStatus.Error;
+
+            warningTask.Text = "Warning task";
+            warningTask.ProgressText = "Completed with warnings";
+            warningTask.Status = StepWizardTaskStatus.Warning;
+
+            StepWizardTaskItemControl[] taskItems = { pendingTask, runningTask, completedTask, errorTask, warningTask };
+            for (int i = 0; i < taskItems.Length; i++)
+            {
+                taskItems[i].Width = 210;
+                taskItems[i].Height = 72;
+                taskItems[i].Margin = new Padding(0, 0, 8, 8);
+                taskStatesPanel.Controls.Add(taskItems[i]);
+            }
+
             controlsLayout.Controls.Add(labelDemo, 0, 0);
             controlsLayout.Controls.Add(textBoxDemo, 1, 0);
             controlsLayout.Controls.Add(checkBoxDemo, 0, 1);
@@ -207,7 +240,8 @@ namespace AG.StepWizard.Sample
             controlsLayout.Controls.Add(testProgressBar, 1, 3);
             controlsLayout.Controls.Add(checkedListDemo, 0, 4);
             controlsLayout.Controls.Add(listViewDemo, 1, 4);
-            controlsLayout.Controls.Add(testTaskItem, 0, 5);
+            controlsLayout.Controls.Add(taskStatesPanel, 0, 5);
+            controlsLayout.SetColumnSpan(taskStatesPanel, 2);
             controlsGroup.Controls.Add(controlsLayout);
             controlsPage.Controls.Add(controlsGroup);
 
