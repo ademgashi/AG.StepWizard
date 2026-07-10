@@ -17,6 +17,7 @@ namespace AG.StepWizard.Sample
             wizard.FinishButtonClick += WizardFinishButtonClick;
             wizard.CancelButtonClick += WizardCancelButtonClick;
             wizard.SelectedPageChanged += WizardSelectedPageChanged;
+            ApplyCompanionThemes();
         }
 
         private void AppearanceComboSelectedIndexChanged(object sender, EventArgs e)
@@ -25,6 +26,7 @@ namespace AG.StepWizard.Sample
             if (Enum.TryParse(appearanceCombo.SelectedItem.ToString(), out appearance))
             {
                 wizard.Appearance = appearance;
+                ApplyCompanionThemes();
                 UpdateSummary();
             }
         }
@@ -61,13 +63,39 @@ namespace AG.StepWizard.Sample
             Close();
         }
 
+        private void TestButtonClick(object sender, EventArgs e)
+        {
+            StepWizardMessageBox.Show(this, wizard.Theme, "This dialog is rendered by StepWizardMessageBox and uses the current appearance tokens.", "Themed Dialog", MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1);
+        }
+
+        private void ApplyCompanionThemes()
+        {
+            themedToolTip.ApplyTheme(wizard.Theme);
+        }
+
         private void UpdateSummary()
         {
-            summaryList.Items.Clear();
-            summaryList.Items.Add("Project name: " + (string.IsNullOrWhiteSpace(nameTextBox.Text) ? "not entered yet" : nameTextBox.Text));
-            summaryList.Items.Add("Owner: Adem Gashi");
-            summaryList.Items.Add("Requirements confirmed: " + (requirementsCheckBox.Checked ? "yes" : "no"));
-            summaryList.Items.Add("Appearance: " + wizard.Appearance);
+            SetSummaryValue(0, string.IsNullOrWhiteSpace(nameTextBox.Text) ? "not entered yet" : nameTextBox.Text);
+            SetSummaryValue(1, "Adem Gashi");
+            SetSummaryValue(2, requirementsCheckBox.Checked ? "yes" : "no");
+            SetSummaryValue(3, wizard.Appearance.ToString());
+        }
+
+        private void SetSummaryValue(int index, string value)
+        {
+            if (summaryList.Items.Count <= index)
+            {
+                return;
+            }
+
+            if (summaryList.Items[index].SubItems.Count < 2)
+            {
+                summaryList.Items[index].SubItems.Add(value);
+            }
+            else
+            {
+                summaryList.Items[index].SubItems[1].Text = value;
+            }
         }
     }
 }

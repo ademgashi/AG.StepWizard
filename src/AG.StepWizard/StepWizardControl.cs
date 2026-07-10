@@ -587,6 +587,13 @@ namespace AG.StepWizard
                 return;
             }
 
+            IStepWizardThemeAware themeAware = control as IStepWizardThemeAware;
+            if (themeAware != null)
+            {
+                themeAware.ApplyTheme(activeTheme);
+                return;
+            }
+
             control.ForeColor = control.Enabled ? activeTheme.Text : activeTheme.DisabledText;
 
             if (control is TextBoxBase || control is ListBox || control is ComboBox || control is ListView || control is TreeView)

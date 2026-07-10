@@ -155,6 +155,24 @@ wizard.ThemePageControls = true;
 
 The wizard recursively applies token colors to common WinForms child controls such as `Label`, `TextBox`, `ComboBox`, `ListBox`, `CheckBox`, `RadioButton`, `Button`, `Panel`, `TableLayoutPanel`, `FlowLayoutPanel`, `GroupBox`, `LinkLabel`, `TreeView`, and `ListView`. Controls added at runtime are themed as they are inserted. Set `ThemePageControls = false` when a page uses fully custom styling.
 
+For full token-based rendering, use the AG companion controls:
+
+- `StepWizardLabel`
+- `StepWizardTextBox`
+- `StepWizardCheckBox`
+- `StepWizardRadioButton`
+- `StepWizardGroupBox`
+- `StepWizardButton`
+- `StepWizardCheckedListBox`
+- `StepWizardListView`
+- `StepWizardComboBox`
+- `StepWizardProgressBar`
+- `StepWizardToolTip`
+- `StepWizardTaskItemControl`
+- `StepWizardMessageBox`
+
+Controls implementing `IStepWizardThemeAware` are automatically themed when they are placed inside a `StepWizardPage` and `ThemePageControls` is enabled.
+
 ## Themed Dialogs
 
 `MessageBox.Show` is a native Windows dialog and cannot be reliably recolored by WinForms. Use `StepWizardMessageBox` when dialogs should match the active wizard theme:
