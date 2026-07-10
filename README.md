@@ -59,7 +59,7 @@ wizard.PageValidating += (sender, e) =>
 
 wizard.FinishButtonClick += (sender, e) =>
 {
-    MessageBox.Show("Finished.");
+    StepWizardMessageBox.Show(wizard, "Finished.", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
 };
 ```
 
@@ -154,6 +154,22 @@ wizard.ThemePageControls = true;
 ```
 
 The wizard recursively applies token colors to common WinForms child controls such as `Label`, `TextBox`, `ComboBox`, `ListBox`, `CheckBox`, `RadioButton`, `Button`, `Panel`, `TableLayoutPanel`, `FlowLayoutPanel`, `GroupBox`, `LinkLabel`, `TreeView`, and `ListView`. Controls added at runtime are themed as they are inserted. Set `ThemePageControls = false` when a page uses fully custom styling.
+
+## Themed Dialogs
+
+`MessageBox.Show` is a native Windows dialog and cannot be reliably recolored by WinForms. Use `StepWizardMessageBox` when dialogs should match the active wizard theme:
+
+```csharp
+StepWizardMessageBox.Show(
+    this,
+    wizard.Theme,
+    "Enter a project name before continuing.",
+    "Validation",
+    MessageBoxButtons.OK,
+    MessageBoxIcon.Warning);
+```
+
+`StepWizardMessageBox` supports the common modal dialog options from `MessageBox.Show`: owner window, caption, `MessageBoxButtons`, `MessageBoxIcon`, `MessageBoxDefaultButton`, `MessageBoxOptions.RightAlign`, `MessageBoxOptions.RtlReading`, keyboard Accept/Cancel behavior, and `DialogResult` return values. Native file/folder dialogs remain native Windows dialogs.
 
 ## Sample App
 

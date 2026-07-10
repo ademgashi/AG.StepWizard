@@ -34,14 +34,14 @@ namespace AG.StepWizard.Sample
             if (e.PageIndex == 1 && string.IsNullOrWhiteSpace(nameTextBox.Text))
             {
                 e.Cancel = true;
-                MessageBox.Show(this, "Enter a project name before continuing.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                StepWizardMessageBox.Show(this, wizard.Theme, "Enter a project name before continuing.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 nameTextBox.Focus();
             }
 
             if (e.PageIndex == 2 && !requirementsCheckBox.Checked)
             {
                 e.Cancel = true;
-                MessageBox.Show(this, "Confirm the requirements before continuing.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                StepWizardMessageBox.Show(this, wizard.Theme, "Confirm the requirements before continuing.", "Validation", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 requirementsCheckBox.Focus();
             }
         }
@@ -53,7 +53,7 @@ namespace AG.StepWizard.Sample
 
         private void WizardFinishButtonClick(object sender, EventArgs e)
         {
-            MessageBox.Show(this, "The sample wizard finished successfully.", "Finished", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            StepWizardMessageBox.Show(this, wizard.Theme, "The sample wizard finished successfully.", "Finished", MessageBoxButtons.OK, MessageBoxIcon.Information);
         }
 
         private void WizardCancelButtonClick(object sender, EventArgs e)
