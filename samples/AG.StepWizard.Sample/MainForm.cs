@@ -10,6 +10,7 @@ namespace AG.StepWizard.Sample
         private StepWizardLabel messageBoxResultLabel;
         private StepWizardActionButton connectionTestButton;
         private StepWizardLabel connectionResultLabel;
+        private FlowLayoutPanel controlsDemoPanel;
         private int connectionAttempt;
 
         public MainForm()
@@ -24,6 +25,7 @@ namespace AG.StepWizard.Sample
             wizard.FinishButtonClick += WizardFinishButtonClick;
             wizard.CancelButtonClick += WizardCancelButtonClick;
             wizard.SelectedPageChanged += WizardSelectedPageChanged;
+            PrepareThemedControlsPage();
             CreateConnectionTestButton();
             CreateMessageBoxTestButtons();
             ApplyCompanionThemes();
@@ -77,6 +79,56 @@ namespace AG.StepWizard.Sample
             ShowThemedMessageBox("Info", MessageBoxIcon.Information, MessageBoxButtons.OKCancel, MessageBoxDefaultButton.Button1);
         }
 
+        private void PrepareThemedControlsPage()
+        {
+            ClientSize = new Size(1220, 860);
+            MinimumSize = new Size(1080, 760);
+
+            Control companionGroup = controlsPage.Controls.Count > 0 ? controlsPage.Controls[0] : null;
+            controlsPage.Controls.Clear();
+            controlsPage.AutoScroll = false;
+
+            controlsDemoPanel = new FlowLayoutPanel
+            {
+                AutoScroll = true,
+                Dock = DockStyle.Fill,
+                FlowDirection = FlowDirection.TopDown,
+                Padding = new Padding(0, 0, 12, 0),
+                WrapContents = false
+            };
+            controlsDemoPanel.Resize += ControlsDemoPanelResize;
+            controlsPage.Controls.Add(controlsDemoPanel);
+
+            if (companionGroup != null)
+            {
+                companionGroup.Dock = DockStyle.None;
+                companionGroup.Height = 540;
+                companionGroup.Margin = new Padding(0, 0, 0, 12);
+                controlsDemoPanel.Controls.Add(companionGroup);
+            }
+
+            ResizeDemoSections();
+        }
+
+        private void ControlsDemoPanelResize(object sender, EventArgs e)
+        {
+            ResizeDemoSections();
+        }
+
+        private void ResizeDemoSections()
+        {
+            if (controlsDemoPanel == null)
+            {
+                return;
+            }
+
+            int width = Math.Max(680, controlsDemoPanel.ClientSize.Width - controlsDemoPanel.Padding.Horizontal - 8);
+            for (int i = 0; i < controlsDemoPanel.Controls.Count; i++)
+            {
+                controlsDemoPanel.Controls[i].Width = width;
+            }
+        }
+
         private async void ConnectionTestButtonClick(object sender, EventArgs e)
         {
             if (connectionTestButton.IsRunning)
@@ -119,8 +171,9 @@ namespace AG.StepWizard.Sample
         {
             StepWizardGroupBox actionGroup = new StepWizardGroupBox
             {
-                Dock = DockStyle.Bottom,
-                Height = 92,
+                Dock = DockStyle.None,
+                Height = 104,
+                Margin = new Padding(0, 0, 0, 12),
                 Text = "Long operation action button",
                 Padding = new Padding(12, 20, 12, 10)
             };
@@ -155,8 +208,8 @@ namespace AG.StepWizard.Sample
             panel.Controls.Add(connectionTestButton);
             panel.Controls.Add(connectionResultLabel);
             actionGroup.Controls.Add(panel);
-            controlsPage.Controls.Add(actionGroup);
-            actionGroup.BringToFront();
+            controlsDemoPanel.Controls.Add(actionGroup);
+            ResizeDemoSections();
         }
 
         private void ShowThemedMessageBox(string name, MessageBoxIcon icon, MessageBoxButtons buttons, MessageBoxDefaultButton defaultButton)
@@ -180,8 +233,9 @@ namespace AG.StepWizard.Sample
         {
             StepWizardGroupBox messageBoxGroup = new StepWizardGroupBox
             {
-                Dock = DockStyle.Bottom,
-                Height = 104,
+                Dock = DockStyle.None,
+                Height = 132,
+                Margin = new Padding(0, 0, 0, 12),
                 Text = "StepWizardMessageBox test buttons",
                 Padding = new Padding(12, 20, 12, 10)
             };
@@ -209,8 +263,8 @@ namespace AG.StepWizard.Sample
             buttonPanel.Controls.Add(messageBoxResultLabel);
 
             messageBoxGroup.Controls.Add(buttonPanel);
-            controlsPage.Controls.Add(messageBoxGroup);
-            messageBoxGroup.BringToFront();
+            controlsDemoPanel.Controls.Add(messageBoxGroup);
+            ResizeDemoSections();
         }
 
         private StepWizardButton CreateMessageBoxButton(string text, MessageBoxIcon icon, MessageBoxButtons buttons, MessageBoxDefaultButton defaultButton)

@@ -254,7 +254,7 @@ namespace AG.StepWizard
                 {
                     Location = new Point(ScaleValue(18), ScaleValue(18)),
                     Size = new Size(ScaleValue(42), ScaleValue(42)),
-                    Visible = icon != MessageBoxIcon.None
+                    Visible = HasVisibleIcon(icon)
                 };
 
                 messageLabel = new Label
@@ -268,6 +268,7 @@ namespace AG.StepWizard
 
                 body.Controls.Add(messageLabel);
                 body.Controls.Add(iconView);
+                iconView.BringToFront();
 
                 Controls.Add(body);
                 Controls.Add(footer);
@@ -377,12 +378,16 @@ namespace AG.StepWizard
                 }
 
                 int left = ScaleValue(18);
-                if (iconView.Visible)
+                int top = ScaleValue(18);
+                if (iconView != null && iconView.Visible)
                 {
-                    left += ScaleValue(54);
+                    int iconSize = ScaleValue(46);
+                    iconView.Bounds = new Rectangle(ScaleValue(18), top, iconSize, iconSize);
+                    iconView.BringToFront();
+                    left += iconSize + ScaleValue(14);
                 }
 
-                messageLabel.Location = new Point(left, ScaleValue(18));
+                messageLabel.Location = new Point(left, top);
                 messageLabel.Size = new Size(Math.Max(80, messageLabel.Parent.ClientSize.Width - left - ScaleValue(18)), Math.Max(40, messageLabel.Parent.ClientSize.Height - ScaleValue(36)));
 
                 Size preferred = TextRenderer.MeasureText(messageLabel.Text, messageLabel.Font, new Size(messageLabel.Width, 0), TextFormatFlags.WordBreak);
@@ -398,6 +403,11 @@ namespace AG.StepWizard
             private int ScaleValue(int value)
             {
                 return (int)Math.Round(value * DeviceDpi / 96.0);
+            }
+
+            private static bool HasVisibleIcon(MessageBoxIcon icon)
+            {
+                return icon != MessageBoxIcon.None;
             }
         }
 
