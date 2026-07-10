@@ -10,6 +10,10 @@ This project was derived from the MIT-licensed AeroWizard project and intentiona
 
 The sample wizard is rendered for every built-in appearance under `docs/screenshots`.
 
+![Themed controls showcase](docs/screenshots/controls-showcase.png)
+
+The controls showcase includes themed companion controls, task status cards, `StepWizardActionButton` long-operation states, and `StepWizardMessageBox` test buttons.
+
 | Light | GitHub Dark |
 | --- | --- |
 | ![Light appearance](docs/screenshots/light.png) | ![GitHub Dark appearance](docs/screenshots/github-dark.png) |
@@ -18,7 +22,7 @@ The sample wizard is rendered for every built-in appearance under `docs/screensh
 | --- | --- |
 | ![Catppuccin Mocha appearance](docs/screenshots/catppuccin-mocha.png) | ![High Contrast appearance](docs/screenshots/high-contrast.png) |
 
-Additional screenshots include `system.png`, `dark.png`, `oled-black.png`, `blue-dark.png`, `catppuccin-latte.png`, `catppuccin-frappe.png`, `catppuccin-macchiato.png`, `monokai.png`, `solarized-light.png`, `solarized-dark.png`, `linear.png`, `notion.png`, `openclaw.png`, `matrix.png`, `one-dark.png`, `dracula.png`, `nord.png`, `gruvbox-dark.png`, `gruvbox-light.png`, `tokyo-night.png`, `github-light.png`, `vscode-dark-plus.png`, `visual-studio-blue.png`, `visual-studio-dark.png`, `fluent-light.png`, `fluent-dark.png`, and `windows-classic.png`.
+Additional screenshots include `controls-showcase.png`, `system.png`, `dark.png`, `oled-black.png`, `blue-dark.png`, `catppuccin-latte.png`, `catppuccin-frappe.png`, `catppuccin-macchiato.png`, `monokai.png`, `solarized-light.png`, `solarized-dark.png`, `linear.png`, `notion.png`, `openclaw.png`, `matrix.png`, `one-dark.png`, `dracula.png`, `nord.png`, `gruvbox-dark.png`, `gruvbox-light.png`, `tokyo-night.png`, `github-light.png`, `vscode-dark-plus.png`, `visual-studio-blue.png`, `visual-studio-dark.png`, `fluent-light.png`, `fluent-dark.png`, and `windows-classic.png`.
 
 ## Install
 
@@ -218,6 +222,12 @@ StepWizardMessageBox.Show(
 
 `StepWizardMessageBox` supports the common modal dialog options from `MessageBox.Show`: owner window, caption, `MessageBoxButtons`, `MessageBoxIcon`, `MessageBoxDefaultButton`, `MessageBoxOptions.RightAlign`, `MessageBoxOptions.RtlReading`, keyboard Accept/Cancel behavior, and `DialogResult` return values. Native file/folder dialogs remain native Windows dialogs.
 
+Dialog icons are drawn from theme tokens:
+
+- information and question use `Accent`
+- warning uses `Warning`
+- error uses `Error`
+
 ## Sample App
 
 Open `src/AG.StepWizard.sln` and run `AG.StepWizard.Sample`.
@@ -229,6 +239,8 @@ The sample demonstrates:
 - five wizard pages
 - validation before Next
 - Finish and Cancel handling
+- companion controls including `StepWizardActionButton`
+- themed `StepWizardMessageBox` icons and button combinations
 - themed header, footer, buttons, page background, borders, step list, selected step, and completed indicators
 - every built-in appearance exposed by `StepWizardAppearance`
 

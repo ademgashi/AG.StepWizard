@@ -2,6 +2,7 @@
 
 This folder contains generated screenshots of the sample wizard rendered with every built-in `StepWizardAppearance`.
 
+- `controls-showcase.png`
 - `system.png`
 - `light.png`
 - `dark.png`
