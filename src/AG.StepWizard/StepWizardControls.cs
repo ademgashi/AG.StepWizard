@@ -740,7 +740,13 @@ namespace AG.StepWizard
                 graphics.FillEllipse(brush, bounds);
             }
 
-            string marker = status == StepWizardTaskStatus.Completed ? "v" : status == StepWizardTaskStatus.Error ? "x" : status == StepWizardTaskStatus.Warning ? "!" : string.Empty;
+            if (status == StepWizardTaskStatus.Completed)
+            {
+                StepWizardPaint.DrawCheckMark(graphics, bounds, theme.AccentText, 2.4F);
+                return;
+            }
+
+            string marker = status == StepWizardTaskStatus.Error ? "x" : status == StepWizardTaskStatus.Warning ? "!" : string.Empty;
             if (!string.IsNullOrEmpty(marker))
             {
                 TextRenderer.DrawText(graphics, marker, Font, bounds, theme.AccentText, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
@@ -828,15 +834,41 @@ namespace AG.StepWizard
 
         public static void PaintCheckBoxGlyph(Graphics graphics, Rectangle bounds, bool isChecked, bool enabled, StepWizardTheme theme)
         {
-            using (SolidBrush brush = new SolidBrush(enabled ? theme.CardBack : theme.WindowBack))
-            using (Pen pen = new Pen(isChecked ? theme.Accent : theme.Border, 1.5F))
+            graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            Color backColor = isChecked && enabled ? theme.Accent : enabled ? theme.CardBack : theme.WindowBack;
+            Color borderColor = isChecked && enabled ? theme.Accent : theme.Border;
+
+            using (GraphicsPath path = RoundedRectangle(bounds, 3))
+            using (SolidBrush brush = new SolidBrush(backColor))
+            using (Pen pen = new Pen(borderColor, 1.4F))
             {
-                graphics.FillRectangle(brush, bounds);
-                graphics.DrawRectangle(pen, bounds);
+                graphics.FillPath(brush, path);
+                graphics.DrawPath(pen, path);
             }
-            if (isChecked)
+
+            if (isChecked && enabled)
             {
-                TextRenderer.DrawText(graphics, "v", SystemFonts.MessageBoxFont, bounds, theme.Accent, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+                DrawCheckMark(graphics, bounds, theme.AccentText, 2.1F);
+            }
+            else if (isChecked)
+            {
+                DrawCheckMark(graphics, bounds, theme.DisabledText, 2.1F);
+            }
+        }
+
+        public static void DrawCheckMark(Graphics graphics, Rectangle bounds, Color color, float width)
+        {
+            graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            PointF start = new PointF(bounds.Left + bounds.Width * 0.26F, bounds.Top + bounds.Height * 0.54F);
+            PointF middle = new PointF(bounds.Left + bounds.Width * 0.43F, bounds.Top + bounds.Height * 0.70F);
+            PointF end = new PointF(bounds.Left + bounds.Width * 0.76F, bounds.Top + bounds.Height * 0.32F);
+
+            using (Pen pen = new Pen(color, width))
+            {
+                pen.StartCap = LineCap.Round;
+                pen.EndCap = LineCap.Round;
+                pen.LineJoin = LineJoin.Round;
+                graphics.DrawLines(pen, new[] { start, middle, end });
             }
         }
 
