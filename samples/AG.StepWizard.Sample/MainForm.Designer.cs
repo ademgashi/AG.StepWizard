@@ -69,6 +69,13 @@ namespace AG.StepWizard.Sample
             StepWizardTaskItemControl completedTask = new StepWizardTaskItemControl();
             StepWizardTaskItemControl errorTask = new StepWizardTaskItemControl();
             StepWizardTaskItemControl warningTask = new StepWizardTaskItemControl();
+            ListViewItem listViewDemoItem1 = new ListViewItem("StepWizardListView");
+            ListViewItem listViewDemoItem2 = new ListViewItem("Owner draw rows");
+            ListViewItem summaryProjectNameItem = new ListViewItem("Project name");
+            ListViewItem summaryOwnerItem = new ListViewItem("Owner");
+            ListViewItem summaryRequirementsItem = new ListViewItem("Requirements confirmed");
+            ListViewItem summaryAppearanceItem = new ListViewItem("Appearance");
+            ListViewItem summaryControlsStepItem = new ListViewItem("Themed controls step");
 
             SuspendLayout();
 
@@ -200,8 +207,10 @@ namespace AG.StepWizard.Sample
 
             listViewDemo.Columns.Add("ColumnHeader", 130);
             listViewDemo.Columns.Add("Status", 200);
-            listViewDemo.Items.Add(new ListViewItem(new[] { "StepWizardListView", "Ready" }));
-            listViewDemo.Items.Add(new ListViewItem(new[] { "Owner draw rows", "Themed" }));
+            listViewDemoItem1.SubItems.Add("Ready");
+            listViewDemoItem2.SubItems.Add("Themed");
+            listViewDemo.Items.Add(listViewDemoItem1);
+            listViewDemo.Items.Add(listViewDemoItem2);
             listViewDemo.Height = 86;
             listViewDemo.Width = 330;
             listViewDemo.Margin = new Padding(8, 4, 8, 8);
@@ -279,11 +288,16 @@ namespace AG.StepWizard.Sample
             summaryList.Dock = DockStyle.Fill;
             summaryList.Columns.Add("Setting", 180);
             summaryList.Columns.Add("Value", 320);
-            summaryList.Items.Add(new ListViewItem(new[] { "Project name", "not entered yet" }));
-            summaryList.Items.Add(new ListViewItem(new[] { "Owner", "Adem Gashi" }));
-            summaryList.Items.Add(new ListViewItem(new[] { "Requirements confirmed", "no" }));
-            summaryList.Items.Add(new ListViewItem(new[] { "Appearance", "System" }));
-            summaryList.Items.Add(new ListViewItem(new[] { "Themed controls step", "shown" }));
+            summaryProjectNameItem.SubItems.Add("not entered yet");
+            summaryOwnerItem.SubItems.Add("Adem Gashi");
+            summaryRequirementsItem.SubItems.Add("no");
+            summaryAppearanceItem.SubItems.Add("System");
+            summaryControlsStepItem.SubItems.Add("shown");
+            summaryList.Items.Add(summaryProjectNameItem);
+            summaryList.Items.Add(summaryOwnerItem);
+            summaryList.Items.Add(summaryRequirementsItem);
+            summaryList.Items.Add(summaryAppearanceItem);
+            summaryList.Items.Add(summaryControlsStepItem);
             reviewPage.Controls.Add(summaryList);
 
             wizard.Pages.Add(welcomePage);
