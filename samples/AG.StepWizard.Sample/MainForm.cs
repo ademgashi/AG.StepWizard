@@ -1,10 +1,13 @@
 using System;
+using System.Drawing;
 using System.Windows.Forms;
 
 namespace AG.StepWizard.Sample
 {
     public sealed partial class MainForm : Form
     {
+        private StepWizardLabel messageBoxResultLabel;
+
         public MainForm()
         {
             InitializeComponent();
@@ -17,6 +20,7 @@ namespace AG.StepWizard.Sample
             wizard.FinishButtonClick += WizardFinishButtonClick;
             wizard.CancelButtonClick += WizardCancelButtonClick;
             wizard.SelectedPageChanged += WizardSelectedPageChanged;
+            CreateMessageBoxTestButtons();
             ApplyCompanionThemes();
         }
 
@@ -65,7 +69,79 @@ namespace AG.StepWizard.Sample
 
         private void TestButtonClick(object sender, EventArgs e)
         {
-            StepWizardMessageBox.Show(this, wizard.Theme, "This dialog is rendered by StepWizardMessageBox and uses the current appearance tokens.", "Themed Dialog", MessageBoxButtons.OKCancel, MessageBoxIcon.Information, MessageBoxDefaultButton.Button1);
+            ShowThemedMessageBox("Info", MessageBoxIcon.Information, MessageBoxButtons.OKCancel, MessageBoxDefaultButton.Button1);
+        }
+
+        private void ShowThemedMessageBox(string name, MessageBoxIcon icon, MessageBoxButtons buttons, MessageBoxDefaultButton defaultButton)
+        {
+            DialogResult result = StepWizardMessageBox.Show(
+                this,
+                wizard.Theme,
+                name + " message using " + buttons + ".",
+                name + " Dialog",
+                buttons,
+                icon,
+                defaultButton);
+
+            if (messageBoxResultLabel != null)
+            {
+                messageBoxResultLabel.Text = "Last dialog result: " + result;
+            }
+        }
+
+        private void CreateMessageBoxTestButtons()
+        {
+            StepWizardGroupBox messageBoxGroup = new StepWizardGroupBox
+            {
+                Dock = DockStyle.Bottom,
+                Height = 104,
+                Text = "StepWizardMessageBox test buttons",
+                Padding = new Padding(12, 20, 12, 10)
+            };
+
+            FlowLayoutPanel buttonPanel = new FlowLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                WrapContents = true,
+                AutoScroll = false
+            };
+
+            messageBoxResultLabel = new StepWizardLabel
+            {
+                AutoSize = true,
+                Margin = new Padding(8, 8, 12, 8),
+                Text = "Last dialog result: none"
+            };
+
+            buttonPanel.Controls.Add(CreateMessageBoxButton("Info OK", MessageBoxIcon.Information, MessageBoxButtons.OK, MessageBoxDefaultButton.Button1));
+            buttonPanel.Controls.Add(CreateMessageBoxButton("Warning OKCancel", MessageBoxIcon.Warning, MessageBoxButtons.OKCancel, MessageBoxDefaultButton.Button2));
+            buttonPanel.Controls.Add(CreateMessageBoxButton("Error RetryCancel", MessageBoxIcon.Error, MessageBoxButtons.RetryCancel, MessageBoxDefaultButton.Button1));
+            buttonPanel.Controls.Add(CreateMessageBoxButton("Question YesNo", MessageBoxIcon.Question, MessageBoxButtons.YesNo, MessageBoxDefaultButton.Button2));
+            buttonPanel.Controls.Add(CreateMessageBoxButton("Question YesNoCancel", MessageBoxIcon.Question, MessageBoxButtons.YesNoCancel, MessageBoxDefaultButton.Button3));
+            buttonPanel.Controls.Add(CreateMessageBoxButton("AbortRetryIgnore", MessageBoxIcon.Warning, MessageBoxButtons.AbortRetryIgnore, MessageBoxDefaultButton.Button2));
+            buttonPanel.Controls.Add(messageBoxResultLabel);
+
+            messageBoxGroup.Controls.Add(buttonPanel);
+            controlsPage.Controls.Add(messageBoxGroup);
+            messageBoxGroup.BringToFront();
+        }
+
+        private StepWizardButton CreateMessageBoxButton(string text, MessageBoxIcon icon, MessageBoxButtons buttons, MessageBoxDefaultButton defaultButton)
+        {
+            StepWizardButton button = new StepWizardButton
+            {
+                Text = text,
+                Width = 150,
+                Height = 32,
+                Margin = new Padding(4)
+            };
+
+            button.Click += delegate
+            {
+                ShowThemedMessageBox(text, icon, buttons, defaultButton);
+            };
+
+            return button;
         }
 
         private void ShowControlsStepCheckBoxCheckedChanged(object sender, EventArgs e)
