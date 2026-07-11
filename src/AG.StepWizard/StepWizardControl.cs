@@ -37,6 +37,9 @@ namespace AG.StepWizard
         private bool showCancelButton = true;
         private bool showFinishButton = true;
         private bool themePageControls = true;
+        private StepWizardChromeStyle chromeStyle = StepWizardChromeStyle.Enterprise;
+        private StepWizardStepStatusTextMode stepStatusTextMode = StepWizardStepStatusTextMode.Hidden;
+        private int stepListItemHeight = 48;
         private Icon titleIcon;
 
         public StepWizardControl()
@@ -257,6 +260,59 @@ namespace AG.StepWizard
         [DefaultValue(false)]
         [Category("Behavior")]
         public bool ShowProgressInTaskbarIcon { get; set; }
+
+        [DefaultValue(StepWizardChromeStyle.Enterprise)]
+        [Category("Appearance")]
+        public StepWizardChromeStyle ChromeStyle
+        {
+            get { return chromeStyle; }
+            set
+            {
+                if (chromeStyle == value)
+                {
+                    return;
+                }
+
+                chromeStyle = value;
+                if (value == StepWizardChromeStyle.Enterprise && stepStatusTextMode == StepWizardStepStatusTextMode.Visible)
+                {
+                    stepStatusTextMode = StepWizardStepStatusTextMode.Hidden;
+                }
+                else if (value == StepWizardChromeStyle.Default && stepStatusTextMode == StepWizardStepStatusTextMode.Hidden)
+                {
+                    stepStatusTextMode = StepWizardStepStatusTextMode.Visible;
+                }
+
+                ApplyLayoutMetrics();
+                ApplyTheme();
+            }
+        }
+
+        [DefaultValue(StepWizardStepStatusTextMode.Hidden)]
+        [Category("Appearance")]
+        public StepWizardStepStatusTextMode StepStatusTextMode
+        {
+            get { return stepStatusTextMode; }
+            set
+            {
+                stepStatusTextMode = value;
+                ApplyLayoutMetrics();
+                stepList.Invalidate();
+            }
+        }
+
+        [DefaultValue(48)]
+        [Category("Layout")]
+        public int StepListItemHeight
+        {
+            get { return stepListItemHeight; }
+            set
+            {
+                stepListItemHeight = Math.Max(40, value);
+                ApplyLayoutMetrics();
+                stepList.Invalidate();
+            }
+        }
 
         /// <summary>Gets or sets the fallback header subtitle.</summary>
         [DefaultValue("")]
@@ -706,22 +762,24 @@ namespace AG.StepWizard
 
         private void ApplyLayoutMetrics()
         {
+            bool enterprise = chromeStyle == StepWizardChromeStyle.Enterprise;
             int scale = ScaleValue(1);
             Padding outerPadding = new Padding(ScaleValue(1));
-            Padding footerPadding = new Padding(ScaleValue(16), ScaleValue(10), ScaleValue(16), ScaleValue(10));
-            int headerHeight = ScaleValue(92);
-            int footerHeight = ScaleValue(64);
-            int buttonWidth = ScaleValue(92);
-            int buttonHeight = ScaleValue(36);
-            int gap = ScaleValue(8);
+            Padding footerPadding = enterprise ? new Padding(ScaleValue(18), ScaleValue(10), ScaleValue(18), ScaleValue(10)) : new Padding(ScaleValue(16), ScaleValue(10), ScaleValue(16), ScaleValue(10));
+            int headerHeight = ScaleValue(enterprise ? 68 : 92);
+            int footerHeight = ScaleValue(enterprise ? 60 : 64);
+            int buttonWidth = ScaleValue(enterprise ? 96 : 92);
+            int buttonHeight = ScaleValue(enterprise ? 34 : 36);
+            int gap = ScaleValue(enterprise ? 10 : 8);
             int right = footerPadding.Right;
 
             Padding = outerPadding;
             header.Height = headerHeight;
+            header.Enterprise = enterprise;
             footer.Height = footerHeight;
             footer.Padding = footerPadding;
             stepList.Width = stepListWidth;
-            stepList.Padding = new Padding(ScaleValue(14), ScaleValue(18), ScaleValue(12), ScaleValue(18));
+            stepList.Padding = enterprise ? new Padding(ScaleValue(12), ScaleValue(14), ScaleValue(10), ScaleValue(14)) : new Padding(ScaleValue(14), ScaleValue(18), ScaleValue(12), ScaleValue(18));
 
             ThemedWizardButton[] buttons = { cancelButton, finishButton, nextButton, backButton };
             for (int i = 0; i < buttons.Length; i++)
@@ -738,13 +796,16 @@ namespace AG.StepWizard
 
         private void FooterResize(object sender, EventArgs e)
         {
-            int buttonWidth = ScaleValue(92);
-            int gap = ScaleValue(8);
-            int top = Math.Max(ScaleValue(8), (footer.Height - ScaleValue(36)) / 2);
-            int right = ScaleValue(16);
+            bool enterprise = chromeStyle == StepWizardChromeStyle.Enterprise;
+            int buttonWidth = ScaleValue(enterprise ? 96 : 92);
+            int buttonHeight = ScaleValue(enterprise ? 34 : 36);
+            int gap = ScaleValue(enterprise ? 10 : 8);
+            int top = Math.Max(ScaleValue(8), (footer.Height - buttonHeight) / 2);
+            int right = ScaleValue(enterprise ? 18 : 16);
             ThemedWizardButton[] buttons = { cancelButton, finishButton, nextButton, backButton };
             for (int i = 0; i < buttons.Length; i++)
             {
+                buttons[i].Size = new Size(buttonWidth, buttonHeight);
                 buttons[i].Location = new Point(footer.Width - right - ((i + 1) * buttonWidth) - (i * gap), top);
             }
         }
@@ -782,6 +843,10 @@ namespace AG.StepWizard
             nextButton.SetTheme(activeTheme);
             finishButton.SetTheme(activeTheme);
             cancelButton.SetTheme(activeTheme);
+            backButton.Role = ThemedWizardButtonRole.Secondary;
+            cancelButton.Role = ThemedWizardButtonRole.Secondary;
+            nextButton.Role = chromeStyle == StepWizardChromeStyle.Enterprise ? ThemedWizardButtonRole.Primary : ThemedWizardButtonRole.Secondary;
+            finishButton.Role = chromeStyle == StepWizardChromeStyle.Enterprise ? ThemedWizardButtonRole.Primary : ThemedWizardButtonRole.Secondary;
             Invalidate(true);
         }
 
@@ -1304,6 +1369,7 @@ namespace AG.StepWizard
         private sealed class WizardHeader : Control
         {
             private StepWizardTheme theme = StepWizardTheme.Light;
+            public bool Enterprise { get; set; }
 
             public string Title { get; set; }
             public string Subtitle { get; set; }
@@ -1327,13 +1393,15 @@ namespace AG.StepWizard
             {
                 base.OnPaint(e);
                 e.Graphics.Clear(theme.HeaderBack);
-                Rectangle textBounds = new Rectangle(24, 18, Width - 48, Height - 28);
-                using (Font titleFont = new Font(Font.FontFamily, Font.Size + 5F, FontStyle.Bold))
-                using (Font subtitleFont = new Font(Font.FontFamily, Font.Size + 1F, FontStyle.Regular))
+                int left = Enterprise ? 26 : 24;
+                int top = Enterprise ? 11 : 18;
+                Rectangle textBounds = new Rectangle(left, top, Width - (left * 2), Height - top - 8);
+                using (Font titleFont = new Font(Font.FontFamily, Font.Size + (Enterprise ? 4F : 5F), FontStyle.Bold))
+                using (Font subtitleFont = new Font(Font.FontFamily, Font.Size + (Enterprise ? 0.5F : 1F), FontStyle.Regular))
                 using (Pen borderPen = new Pen(theme.Border))
                 {
                     TextRenderer.DrawText(e.Graphics, Title, titleFont, textBounds, theme.Text, TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
-                    Rectangle subtitleBounds = new Rectangle(textBounds.Left, textBounds.Top + 34, textBounds.Width, 26);
+                    Rectangle subtitleBounds = new Rectangle(textBounds.Left, textBounds.Top + (Enterprise ? 29 : 34), textBounds.Width, 24);
                     TextRenderer.DrawText(e.Graphics, Subtitle, subtitleFont, subtitleBounds, theme.MutedText, TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
                     e.Graphics.DrawLine(borderPen, 0, Height - 1, Width, Height - 1);
                 }
@@ -1365,8 +1433,10 @@ namespace AG.StepWizard
                 e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
                 e.Graphics.Clear(theme.SidebarBack);
 
-                int itemHeight = ScaleValue(58);
-                int circleSize = ScaleValue(28);
+                bool enterprise = owner.chromeStyle == StepWizardChromeStyle.Enterprise;
+                bool showAnyStatus = owner.stepStatusTextMode != StepWizardStepStatusTextMode.Hidden;
+                int itemHeight = ScaleValue(enterprise ? owner.stepListItemHeight : 58);
+                int circleSize = ScaleValue(enterprise ? 28 : 28);
                 int x = Padding.Left;
                 int y = Padding.Top;
                 int textX = x + circleSize + ScaleValue(12);
@@ -1385,7 +1455,7 @@ namespace AG.StepWizard
                         continue;
                     }
 
-                    Rectangle itemBounds = new Rectangle(Padding.Left / 2, y - ScaleValue(6), Width - Padding.Horizontal / 2 - ScaleValue(8), itemHeight);
+                    Rectangle itemBounds = new Rectangle(Padding.Left / 2, y - ScaleValue(enterprise ? 3 : 6), Width - Padding.Horizontal / 2 - ScaleValue(8), itemHeight - ScaleValue(enterprise ? 4 : 0));
                     bool selected = i == owner.selectedPageIndex;
                     bool completed = owner.selectedPageIndex > i;
 
@@ -1398,22 +1468,27 @@ namespace AG.StepWizard
                         }
                     }
 
-                    Rectangle circleBounds = new Rectangle(x, y + ScaleValue(8), circleSize, circleSize);
+                    Rectangle circleBounds = new Rectangle(x, y + Math.Max(ScaleValue(6), (itemBounds.Height - circleSize) / 2), circleSize, circleSize);
                     DrawCircle(e.Graphics, circleBounds, visibleStepNumber, completed, selected);
 
-                    Color titleColor = selected ? theme.AccentText : theme.Text;
-                    Color mutedColor = selected ? theme.AccentText : theme.MutedText;
+                    Color titleColor = selected && !enterprise ? theme.AccentText : theme.Text;
+                    Color mutedColor = selected && !enterprise ? theme.AccentText : theme.MutedText;
                     string title = string.IsNullOrWhiteSpace(page.Title) ? "Step " + visibleStepNumber : page.Title;
                     string subtitle = completed ? "Completed" : (selected ? "Current step" : "Pending");
-                    Rectangle titleBounds = new Rectangle(textX, y + ScaleValue(6), Width - textX - ScaleValue(12), ScaleValue(22));
-                    Rectangle subtitleBounds = new Rectangle(textX, y + ScaleValue(30), Width - textX - ScaleValue(12), ScaleValue(20));
+                    bool drawStatus = owner.stepStatusTextMode == StepWizardStepStatusTextMode.Visible || (owner.stepStatusTextMode == StepWizardStepStatusTextMode.CurrentOnly && selected);
+                    int titleTop = showAnyStatus && drawStatus ? y + ScaleValue(enterprise ? 5 : 6) : y + Math.Max(ScaleValue(5), (itemBounds.Height - ScaleValue(22)) / 2);
+                    Rectangle titleBounds = new Rectangle(textX, titleTop, Width - textX - ScaleValue(12), ScaleValue(22));
+                    Rectangle subtitleBounds = new Rectangle(textX, y + ScaleValue(enterprise ? 27 : 30), Width - textX - ScaleValue(12), ScaleValue(20));
 
                     using (Font titleFont = new Font(Font, selected ? FontStyle.Bold : FontStyle.Regular))
                     {
                         TextRenderer.DrawText(e.Graphics, title, titleFont, titleBounds, titleColor, TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
                     }
 
-                    TextRenderer.DrawText(e.Graphics, subtitle, Font, subtitleBounds, mutedColor, TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
+                    if (drawStatus)
+                    {
+                        TextRenderer.DrawText(e.Graphics, subtitle, Font, subtitleBounds, mutedColor, TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
+                    }
                     y += itemHeight;
                     visibleStepNumber++;
                 }

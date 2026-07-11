@@ -4,11 +4,18 @@ using System.Windows.Forms;
 
 namespace AG.StepWizard
 {
+    internal enum ThemedWizardButtonRole
+    {
+        Secondary,
+        Primary
+    }
+
     internal sealed class ThemedWizardButton : Button
     {
         private bool isHovered;
         private bool isPressed;
         private StepWizardTheme theme = StepWizardTheme.Light;
+        private ThemedWizardButtonRole role;
 
         public ThemedWizardButton()
         {
@@ -21,6 +28,16 @@ namespace AG.StepWizard
         {
             theme = value ?? StepWizardTheme.Light;
             Invalidate();
+        }
+
+        public ThemedWizardButtonRole Role
+        {
+            get { return role; }
+            set
+            {
+                role = value;
+                Invalidate();
+            }
         }
 
         protected override void OnEnabledChanged(System.EventArgs e)
@@ -70,17 +87,18 @@ namespace AG.StepWizard
             e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
             e.Graphics.PixelOffsetMode = PixelOffsetMode.Half;
 
-            Color backColor = Enabled ? theme.CardBack : theme.WindowBack;
-            Color foreColor = Enabled ? theme.Text : theme.DisabledText;
-            Color borderColor = theme.Border;
+            bool primary = role == ThemedWizardButtonRole.Primary;
+            Color backColor = Enabled ? (primary ? theme.Accent : theme.CardBack) : theme.WindowBack;
+            Color foreColor = Enabled ? (primary ? theme.AccentText : theme.Text) : theme.DisabledText;
+            Color borderColor = Enabled && primary ? theme.Accent : theme.Border;
 
             if (Enabled && isPressed)
             {
-                backColor = theme.SelectedBack;
+                backColor = primary ? ControlPaint.Dark(theme.Accent, 0.08F) : theme.SelectedBack;
             }
             else if (Enabled && isHovered)
             {
-                backColor = theme.HoverBack;
+                backColor = primary ? ControlPaint.Light(theme.Accent, 0.08F) : theme.HoverBack;
             }
 
             Color parentBackColor = Parent == null ? theme.CardBack : Parent.BackColor;

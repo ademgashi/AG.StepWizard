@@ -893,6 +893,249 @@ namespace AG.StepWizard
         }
     }
 
+    public class StepWizardCard : Panel, IStepWizardThemeAware
+    {
+        private StepWizardTheme theme = StepWizardTheme.Light;
+
+        public StepWizardCard()
+        {
+            Padding = new Padding(14);
+            Size = new Size(280, 96);
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw | ControlStyles.UserPaint, true);
+        }
+
+        public virtual void ApplyTheme(StepWizardTheme theme)
+        {
+            this.theme = theme ?? StepWizardTheme.Light;
+            BackColor = this.theme.CardBack;
+            ForeColor = Enabled ? this.theme.Text : this.theme.DisabledText;
+            ApplyThemeToChildren(this);
+            Invalidate();
+        }
+
+        protected StepWizardTheme CurrentTheme
+        {
+            get { return theme; }
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            Rectangle bounds = new Rectangle(0, 0, Width - 1, Height - 1);
+            using (GraphicsPath path = StepWizardPaint.RoundedRectangle(bounds, 8))
+            using (SolidBrush brush = new SolidBrush(theme.CardBack))
+            using (Pen pen = new Pen(theme.Border))
+            {
+                e.Graphics.FillPath(brush, path);
+                e.Graphics.DrawPath(pen, path);
+            }
+        }
+
+        private void ApplyThemeToChildren(Control parent)
+        {
+            foreach (Control control in parent.Controls)
+            {
+                IStepWizardThemeAware aware = control as IStepWizardThemeAware;
+                if (aware != null)
+                {
+                    aware.ApplyTheme(theme);
+                }
+                else
+                {
+                    control.BackColor = theme.CardBack;
+                    control.ForeColor = control.Enabled ? theme.Text : theme.DisabledText;
+                }
+
+                ApplyThemeToChildren(control);
+            }
+        }
+    }
+
+    public class StepWizardOptionCard : Control, IStepWizardThemeAware
+    {
+        private bool selected;
+        private bool hovered;
+        private StepWizardTheme theme = StepWizardTheme.Light;
+        private string subtitle = string.Empty;
+
+        public StepWizardOptionCard()
+        {
+            Size = new Size(220, 78);
+            Cursor = Cursors.Hand;
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw | ControlStyles.UserPaint, true);
+        }
+
+        [DefaultValue(false)]
+        public bool Selected
+        {
+            get { return selected; }
+            set
+            {
+                if (selected == value)
+                {
+                    return;
+                }
+
+                selected = value;
+                Invalidate();
+            }
+        }
+
+        [DefaultValue("")]
+        public string Subtitle
+        {
+            get { return subtitle; }
+            set { subtitle = value ?? string.Empty; Invalidate(); }
+        }
+
+        public void ApplyTheme(StepWizardTheme theme)
+        {
+            this.theme = theme ?? StepWizardTheme.Light;
+            BackColor = this.theme.CardBack;
+            ForeColor = Enabled ? this.theme.Text : this.theme.DisabledText;
+            Invalidate();
+        }
+
+        protected override void OnMouseEnter(EventArgs e)
+        {
+            base.OnMouseEnter(e);
+            hovered = true;
+            Invalidate();
+        }
+
+        protected override void OnMouseLeave(EventArgs e)
+        {
+            base.OnMouseLeave(e);
+            hovered = false;
+            Invalidate();
+        }
+
+        protected override void OnClick(EventArgs e)
+        {
+            base.OnClick(e);
+            Selected = true;
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            Color back = selected ? theme.SelectedBack : hovered ? theme.HoverBack : theme.CardBack;
+            Color border = selected ? theme.Accent : theme.Border;
+            Rectangle bounds = new Rectangle(0, 0, Width - 1, Height - 1);
+            using (GraphicsPath path = StepWizardPaint.RoundedRectangle(bounds, 8))
+            using (SolidBrush brush = new SolidBrush(back))
+            using (Pen pen = new Pen(border, selected ? 2F : 1F))
+            {
+                e.Graphics.FillPath(brush, path);
+                e.Graphics.DrawPath(pen, path);
+            }
+
+            Rectangle glyph = new Rectangle(14, 15, 22, 22);
+            StepWizardPaint.PaintRadioGlyph(e.Graphics, glyph, selected, Enabled, theme);
+            using (Font titleFont = new Font(Font, FontStyle.Bold))
+            {
+                TextRenderer.DrawText(e.Graphics, Text, titleFont, new Rectangle(46, 12, Width - 58, 24), Enabled ? theme.Text : theme.DisabledText, TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
+            }
+
+            TextRenderer.DrawText(e.Graphics, subtitle, Font, new Rectangle(46, 36, Width - 58, 34), Enabled ? theme.MutedText : theme.DisabledText, TextFormatFlags.EndEllipsis | TextFormatFlags.WordBreak);
+        }
+    }
+
+    public class StepWizardStatusCard : Control, IStepWizardThemeAware
+    {
+        private StepWizardTaskStatus status = StepWizardTaskStatus.Pending;
+        private StepWizardTheme theme = StepWizardTheme.Light;
+        private string subtitle = string.Empty;
+
+        public StepWizardStatusCard()
+        {
+            Size = new Size(220, 72);
+            SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.OptimizedDoubleBuffer | ControlStyles.ResizeRedraw | ControlStyles.UserPaint, true);
+        }
+
+        [DefaultValue(StepWizardTaskStatus.Pending)]
+        public StepWizardTaskStatus Status
+        {
+            get { return status; }
+            set { status = value; Invalidate(); }
+        }
+
+        [DefaultValue("")]
+        public string Subtitle
+        {
+            get { return subtitle; }
+            set { subtitle = value ?? string.Empty; Invalidate(); }
+        }
+
+        public void ApplyTheme(StepWizardTheme theme)
+        {
+            this.theme = theme ?? StepWizardTheme.Light;
+            BackColor = this.theme.CardBack;
+            ForeColor = Enabled ? this.theme.Text : this.theme.DisabledText;
+            Invalidate();
+        }
+
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            Rectangle bounds = new Rectangle(0, 0, Width - 1, Height - 1);
+            using (GraphicsPath path = StepWizardPaint.RoundedRectangle(bounds, 8))
+            using (SolidBrush brush = new SolidBrush(theme.CardBack))
+            using (Pen pen = new Pen(theme.Border))
+            {
+                e.Graphics.FillPath(brush, path);
+                e.Graphics.DrawPath(pen, path);
+            }
+
+            Rectangle badge = new Rectangle(14, 18, 24, 24);
+            PaintBadge(e.Graphics, badge);
+            using (Font titleFont = new Font(Font, FontStyle.Bold))
+            {
+                TextRenderer.DrawText(e.Graphics, Text, titleFont, new Rectangle(50, 12, Width - 62, 24), Enabled ? theme.Text : theme.DisabledText, TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
+            }
+
+            TextRenderer.DrawText(e.Graphics, subtitle, Font, new Rectangle(50, 36, Width - 62, 26), Enabled ? theme.MutedText : theme.DisabledText, TextFormatFlags.EndEllipsis | TextFormatFlags.SingleLine);
+        }
+
+        private void PaintBadge(Graphics graphics, Rectangle bounds)
+        {
+            Color color = GetStatusColor();
+            using (SolidBrush brush = new SolidBrush(color))
+            {
+                graphics.FillEllipse(brush, bounds);
+            }
+
+            if (status == StepWizardTaskStatus.Completed)
+            {
+                StepWizardPaint.DrawCheckMark(graphics, bounds, theme.AccentText, 2.4F);
+                return;
+            }
+
+            string marker = status == StepWizardTaskStatus.Error ? "x" : status == StepWizardTaskStatus.Warning ? "!" : status == StepWizardTaskStatus.Running ? "..." : string.Empty;
+            if (!string.IsNullOrEmpty(marker))
+            {
+                TextRenderer.DrawText(graphics, marker, Font, bounds, theme.AccentText, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            }
+        }
+
+        private Color GetStatusColor()
+        {
+            switch (status)
+            {
+                case StepWizardTaskStatus.Completed:
+                    return theme.Success;
+                case StepWizardTaskStatus.Error:
+                    return theme.Error;
+                case StepWizardTaskStatus.Warning:
+                    return theme.Warning;
+                case StepWizardTaskStatus.Running:
+                    return theme.Accent;
+                default:
+                    return theme.MutedText;
+            }
+        }
+    }
+
     public enum StepWizardTaskStatus
     {
         Pending,
@@ -1226,7 +1469,7 @@ namespace AG.StepWizard
             }
         }
 
-        private static void PaintRadioGlyph(Graphics graphics, Rectangle bounds, bool isChecked, bool enabled, StepWizardTheme theme)
+        public static void PaintRadioGlyph(Graphics graphics, Rectangle bounds, bool isChecked, bool enabled, StepWizardTheme theme)
         {
             using (SolidBrush brush = new SolidBrush(enabled ? theme.CardBack : theme.WindowBack))
             using (Pen pen = new Pen(isChecked ? theme.Accent : theme.Border, 1.5F))

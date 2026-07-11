@@ -10,6 +10,10 @@ This project was derived from the MIT-licensed AeroWizard project and intentiona
 
 The sample wizard is rendered for every built-in appearance under `docs/screenshots`.
 
+![Enterprise chrome preview](docs/screenshots/enterprise-chrome-preview.png)
+
+The enterprise chrome preview shows the compact header, quieter step list, primary Next button, option cards, and status cards intended for installer-style applications.
+
 ![Themed controls showcase](docs/screenshots/controls-showcase.png)
 
 The controls showcase includes themed companion controls, task status cards, `StepWizardActionButton` long-operation states, and `StepWizardMessageBox` test buttons.
@@ -22,12 +26,12 @@ The controls showcase includes themed companion controls, task status cards, `St
 | --- | --- |
 | ![Catppuccin Mocha appearance](docs/screenshots/catppuccin-mocha.png) | ![High Contrast appearance](docs/screenshots/high-contrast.png) |
 
-Additional screenshots include `controls-showcase.png`, `system.png`, `dark.png`, `oled-black.png`, `blue-dark.png`, `catppuccin-latte.png`, `catppuccin-frappe.png`, `catppuccin-macchiato.png`, `monokai.png`, `solarized-light.png`, `solarized-dark.png`, `linear.png`, `notion.png`, `openclaw.png`, `matrix.png`, `one-dark.png`, `dracula.png`, `nord.png`, `gruvbox-dark.png`, `gruvbox-light.png`, `tokyo-night.png`, `github-light.png`, `vscode-dark-plus.png`, `visual-studio-blue.png`, `visual-studio-dark.png`, `fluent-light.png`, `fluent-dark.png`, and `windows-classic.png`.
+Additional screenshots include `enterprise-chrome-preview.png`, `controls-showcase.png`, `system.png`, `dark.png`, `oled-black.png`, `blue-dark.png`, `catppuccin-latte.png`, `catppuccin-frappe.png`, `catppuccin-macchiato.png`, `monokai.png`, `solarized-light.png`, `solarized-dark.png`, `linear.png`, `notion.png`, `openclaw.png`, `matrix.png`, `one-dark.png`, `dracula.png`, `nord.png`, `gruvbox-dark.png`, `gruvbox-light.png`, `tokyo-night.png`, `github-light.png`, `vscode-dark-plus.png`, `visual-studio-blue.png`, `visual-studio-dark.png`, `fluent-light.png`, `fluent-dark.png`, and `windows-classic.png`.
 
 ## Install
 
 ```bash
-dotnet add package AG.StepWizard --version 1.3.0
+dotnet add package AG.StepWizard --version 1.3.4
 ```
 
 ## Basic Usage
@@ -40,7 +44,9 @@ var wizard = new StepWizardControl
     Dock = DockStyle.Fill,
     HeaderTitle = "Setup",
     HeaderSubtitle = "Complete the setup steps.",
-    Appearance = StepWizardAppearance.System
+    Appearance = StepWizardAppearance.System,
+    ChromeStyle = StepWizardChromeStyle.Enterprise,
+    StepStatusTextMode = StepWizardStepStatusTextMode.Hidden
 };
 
 wizard.Pages.Add(new StepWizardPage
@@ -66,6 +72,8 @@ wizard.FinishButtonClick += (sender, e) =>
     StepWizardMessageBox.Show(wizard, "Finished.", "Done", MessageBoxButtons.OK, MessageBoxIcon.Information);
 };
 ```
+
+`ChromeStyle = Enterprise` enables the modern installer shell: compact header, quieter step list, primary Next/Finish buttons, and tighter DPI-aware spacing. Use `ChromeStyle = Default` and `StepStatusTextMode = Visible` when you want the older verbose step-list behavior.
 
 ## Optional Pages
 
@@ -269,14 +277,14 @@ Publish with NuGet Trusted Publishing from GitHub Actions:
    - Environment: `nuget`
 3. In GitHub, create an environment named `nuget`.
 4. In GitHub repo variables, add `NUGET_USER` with the nuget.org username of the person who created the Trusted Publishing policy.
-5. Create and push a version tag such as `v1.3.0`, publish a GitHub release, or run the `Release` workflow manually.
+5. Create and push a version tag such as `v1.3.4`, publish a GitHub release, or run the `Release` workflow manually.
 
 The release workflow requests a short-lived NuGet publishing key using GitHub OIDC and `NuGet/login@v1`; no long-lived API key is stored in GitHub.
 
 Manual command-line publishing with an API key still works for unsupported workflows:
 
 ```bash
-dotnet nuget push ./artifacts/AG.StepWizard.1.3.0.nupkg --api-key YOUR_NUGET_API_KEY --source https://api.nuget.org/v3/index.json
+dotnet nuget push ./artifacts/AG.StepWizard.1.3.4.nupkg --api-key YOUR_NUGET_API_KEY --source https://api.nuget.org/v3/index.json
 ```
 
 ## Migration From AeroWizard

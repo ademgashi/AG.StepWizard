@@ -7,7 +7,7 @@
     <Authors>Adem Gashi</Authors>
     <Company>AG</Company>
     <PackageId>AG.StepWizard</PackageId>
-    <Version>1.3.3</Version>
+    <Version>1.3.4</Version>
     <Description>A modern themed WinForms step wizard control with light/dark theme support.</Description>
     <PackageTags>winforms;wizard;step-wizard;dark-mode;theme;dotnet</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
