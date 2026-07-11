@@ -11,34 +11,36 @@ namespace AG.StepWizard
     /// </summary>
     public static class StepWizardMessageBox
     {
+        public static StepWizardTheme DefaultTheme { get; set; }
+
         public static DialogResult Show(string text)
         {
-            return Show(null, StepWizardTheme.Light, text, string.Empty, MessageBoxButtons.OK, MessageBoxIcon.None, MessageBoxDefaultButton.Button1, 0);
+            return Show(null, ResolveDefaultTheme(), text, string.Empty, MessageBoxButtons.OK, MessageBoxIcon.None, MessageBoxDefaultButton.Button1, 0);
         }
 
         public static DialogResult Show(string text, string caption)
         {
-            return Show(null, StepWizardTheme.Light, text, caption, MessageBoxButtons.OK, MessageBoxIcon.None, MessageBoxDefaultButton.Button1, 0);
+            return Show(null, ResolveDefaultTheme(), text, caption, MessageBoxButtons.OK, MessageBoxIcon.None, MessageBoxDefaultButton.Button1, 0);
         }
 
         public static DialogResult Show(string text, string caption, MessageBoxButtons buttons)
         {
-            return Show(null, StepWizardTheme.Light, text, caption, buttons, MessageBoxIcon.None, MessageBoxDefaultButton.Button1, 0);
+            return Show(null, ResolveDefaultTheme(), text, caption, buttons, MessageBoxIcon.None, MessageBoxDefaultButton.Button1, 0);
         }
 
         public static DialogResult Show(string text, string caption, MessageBoxButtons buttons, MessageBoxIcon icon)
         {
-            return Show(null, StepWizardTheme.Light, text, caption, buttons, icon, MessageBoxDefaultButton.Button1, 0);
+            return Show(null, ResolveDefaultTheme(), text, caption, buttons, icon, MessageBoxDefaultButton.Button1, 0);
         }
 
         public static DialogResult Show(string text, string caption, MessageBoxButtons buttons, MessageBoxIcon icon, MessageBoxDefaultButton defaultButton)
         {
-            return Show(null, StepWizardTheme.Light, text, caption, buttons, icon, defaultButton, 0);
+            return Show(null, ResolveDefaultTheme(), text, caption, buttons, icon, defaultButton, 0);
         }
 
         public static DialogResult Show(string text, string caption, MessageBoxButtons buttons, MessageBoxIcon icon, MessageBoxDefaultButton defaultButton, MessageBoxOptions options)
         {
-            return Show(null, StepWizardTheme.Light, text, caption, buttons, icon, defaultButton, options);
+            return Show(null, ResolveDefaultTheme(), text, caption, buttons, icon, defaultButton, options);
         }
 
         public static DialogResult Show(IWin32Window owner, string text)
@@ -163,7 +165,12 @@ namespace AG.StepWizard
                 control = control.Parent;
             }
 
-            return StepWizardTheme.Light;
+            return ResolveDefaultTheme();
+        }
+
+        private static StepWizardTheme ResolveDefaultTheme()
+        {
+            return DefaultTheme ?? StepWizardTheme.Light;
         }
 
         private sealed class ThemedMessageBoxForm : Form

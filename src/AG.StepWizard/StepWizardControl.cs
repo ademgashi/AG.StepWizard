@@ -15,7 +15,7 @@ namespace AG.StepWizard
     [DefaultProperty("Pages")]
     [Designer(typeof(StepWizardControlDesigner))]
     [ToolboxItem(true)]
-    public class StepWizardControl : UserControl
+    public class StepWizardControl : UserControl, ISupportInitialize
     {
         private readonly StepWizardPageCollection pages;
         private readonly WizardHeader header;
@@ -37,6 +37,7 @@ namespace AG.StepWizard
         private bool showCancelButton = true;
         private bool showFinishButton = true;
         private bool themePageControls = true;
+        private Icon titleIcon;
 
         public StepWizardControl()
         {
@@ -95,6 +96,10 @@ namespace AG.StepWizard
         [Category("Action")]
         public event EventHandler CancelButtonClick;
 
+        /// <summary>Occurs when Cancel is clicked before the application handles cancellation.</summary>
+        [Category("Behavior")]
+        public event CancelEventHandler Cancelling;
+
         /// <summary>Occurs before Next or Finish navigation completes.</summary>
         [Category("Behavior")]
         public event EventHandler<StepWizardPageValidatingEventArgs> PageValidating;
@@ -137,14 +142,22 @@ namespace AG.StepWizard
         [Browsable(false)]
         public bool CanGoBack
         {
-            get { return GetPreviousPageIndex(selectedPageIndex) >= 0; }
+            get
+            {
+                StepWizardPage page = SelectedPage;
+                return page != null && page.AllowBack && GetPreviousPageIndex(selectedPageIndex) >= 0;
+            }
         }
 
         /// <summary>Gets whether Next navigation is available.</summary>
         [Browsable(false)]
         public bool CanGoNext
         {
-            get { return GetNextPageIndex(selectedPageIndex) >= 0; }
+            get
+            {
+                StepWizardPage page = SelectedPage;
+                return page != null && page.AllowNext && GetNextPageIndex(selectedPageIndex) >= 0;
+            }
         }
 
         /// <summary>Gets whether the selected page is the finish page.</summary>
@@ -209,6 +222,41 @@ namespace AG.StepWizard
                 UpdateHeader();
             }
         }
+
+        /// <summary>Gets or sets the text shown in the wizard header.</summary>
+        [DefaultValue("Step Wizard")]
+        [Category("Appearance")]
+        public string Title
+        {
+            get { return HeaderTitle; }
+            set { HeaderTitle = value; }
+        }
+
+        /// <summary>Gets or sets the optional wizard title icon. The modern renderer does not display it.</summary>
+        [DefaultValue(null)]
+        [Category("Appearance")]
+        public Icon TitleIcon
+        {
+            get { return titleIcon; }
+            set { titleIcon = value; }
+        }
+
+        /// <summary>Gets or sets the step list font.</summary>
+        [Category("Appearance")]
+        public Font StepListFont
+        {
+            get { return stepList.Font; }
+            set
+            {
+                stepList.Font = value ?? Font;
+                stepList.Invalidate();
+            }
+        }
+
+        /// <summary>Gets or sets whether progress should be shown in the taskbar. This control does not own taskbar rendering.</summary>
+        [DefaultValue(false)]
+        [Category("Behavior")]
+        public bool ShowProgressInTaskbarIcon { get; set; }
 
         /// <summary>Gets or sets the fallback header subtitle.</summary>
         [DefaultValue("")]
@@ -288,6 +336,12 @@ namespace AG.StepWizard
             return previousIndex >= 0 && NavigateTo(previousIndex, false);
         }
 
+        /// <summary>Moves to the previous page.</summary>
+        public bool PreviousPage()
+        {
+            return GoBack();
+        }
+
         /// <summary>Moves to the next page after validation.</summary>
         public bool GoNext()
         {
@@ -298,6 +352,43 @@ namespace AG.StepWizard
 
             int nextIndex = GetNextPageIndex(selectedPageIndex);
             return nextIndex >= 0 && NavigateTo(nextIndex, false);
+        }
+
+        /// <summary>Moves to the next page after validation.</summary>
+        public bool NextPage()
+        {
+            return GoNext();
+        }
+
+        /// <summary>Sets the text shown for a page in the step list and header.</summary>
+        public void SetStepText(StepWizardPage page, string text)
+        {
+            if (page == null)
+            {
+                return;
+            }
+
+            page.Title = text ?? string.Empty;
+            page.Text = page.Title;
+            UpdateHeader();
+            stepList.Invalidate();
+        }
+
+        public void BeginInit()
+        {
+        }
+
+        public void EndInit()
+        {
+            ApplyLayoutMetrics();
+            StepWizardPage selected = SelectedPage;
+            if (selected != null)
+            {
+                selected.OnInitialize(new StepWizardPageInitEventArgs(selected, selectedPageIndex));
+            }
+
+            UpdateHeader();
+            UpdateButtons();
         }
 
         internal void AttachPage(StepWizardPage page)
@@ -450,6 +541,16 @@ namespace AG.StepWizard
 
         private int GetNextPageIndex(int index)
         {
+            StepWizardPage page = index >= 0 && index < Pages.Count ? Pages[index] : null;
+            if (page != null && page.NextPage != null)
+            {
+                int explicitIndex = Pages.IndexOf(page.NextPage);
+                if (explicitIndex >= 0 && (IsInDesignMode || !IsPageSuppressed(explicitIndex)))
+                {
+                    return explicitIndex;
+                }
+            }
+
             for (int i = Math.Max(index + 1, 0); i < Pages.Count; i++)
             {
                 if (!IsPageSuppressed(i))
@@ -504,8 +605,30 @@ namespace AG.StepWizard
                 return false;
             }
 
+            if (!ReferenceEquals(changing.NextPage, nextPage))
+            {
+                if (changing.NextPage == null)
+                {
+                    index = -1;
+                }
+                else
+                {
+                    index = Pages.IndexOf(changing.NextPage);
+                    if (index < 0 || (!IsInDesignMode && IsPageSuppressed(index)))
+                    {
+                        return false;
+                    }
+                }
+            }
+
             selectedPageIndex = index;
             ShowSelectedPage();
+            StepWizardPage selected = SelectedPage;
+            if (selected != null)
+            {
+                selected.OnInitialize(new StepWizardPageInitEventArgs(selected, selectedPageIndex));
+            }
+
             UpdateHeader();
             UpdateButtons();
             stepList.Invalidate();
@@ -531,6 +654,18 @@ namespace AG.StepWizard
                 UpdateButtons();
                 stepList.Invalidate();
             }
+        }
+
+        internal void OnPageBehaviorChanged(StepWizardPage page)
+        {
+            if (page == null || !Pages.Contains(page))
+            {
+                return;
+            }
+
+            UpdateHeader();
+            UpdateButtons();
+            stepList.Invalidate();
         }
 
         private void ShowSelectedPage()
@@ -559,6 +694,13 @@ namespace AG.StepWizard
 
             StepWizardPageValidatingEventArgs args = new StepWizardPageValidatingEventArgs(page, selectedPageIndex);
             OnPageValidating(args);
+            if (!args.Cancel)
+            {
+                StepWizardPageConfirmEventArgs confirmArgs = new StepWizardPageConfirmEventArgs(page, selectedPageIndex);
+                page.OnCommit(confirmArgs);
+                args.Cancel = confirmArgs.Cancel;
+            }
+
             return !args.Cancel;
         }
 
@@ -1032,8 +1174,9 @@ namespace AG.StepWizard
             nextButton.Enabled = CanGoNext;
             nextButton.Visible = !IsFinishPage;
             finishButton.Visible = showFinishButton && IsFinishPage;
-            finishButton.Enabled = SelectedPage != null;
+            finishButton.Enabled = SelectedPage != null && SelectedPage.AllowFinish;
             cancelButton.Visible = showCancelButton;
+            cancelButton.Enabled = SelectedPage == null || SelectedPage.AllowCancel;
         }
 
         private void BackButtonClickCore(object sender, EventArgs e)
@@ -1076,7 +1219,23 @@ namespace AG.StepWizard
 
         private void CancelButtonClickCore(object sender, EventArgs e)
         {
+            CancelEventArgs cancelArgs = new CancelEventArgs();
+            OnCancelling(cancelArgs);
+            if (cancelArgs.Cancel)
+            {
+                return;
+            }
+
             OnCancelButtonClick(EventArgs.Empty);
+        }
+
+        protected virtual void OnCancelling(CancelEventArgs e)
+        {
+            CancelEventHandler handler = Cancelling;
+            if (handler != null)
+            {
+                handler(this, e);
+            }
         }
 
         protected virtual void OnSelectedPageChanging(StepWizardPageChangingEventArgs e)

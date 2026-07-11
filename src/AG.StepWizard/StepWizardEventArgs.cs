@@ -15,7 +15,7 @@ namespace AG.StepWizard
         }
 
         public StepWizardPage CurrentPage { get; private set; }
-        public StepWizardPage NextPage { get; private set; }
+        public StepWizardPage NextPage { get; set; }
         public int CurrentIndex { get; private set; }
         public int NextIndex { get; private set; }
     }
@@ -37,6 +37,32 @@ namespace AG.StepWizard
     public class StepWizardPageValidatingEventArgs : CancelEventArgs
     {
         public StepWizardPageValidatingEventArgs(StepWizardPage page, int pageIndex)
+        {
+            Page = page;
+            PageIndex = pageIndex;
+        }
+
+        public StepWizardPage Page { get; private set; }
+        public int PageIndex { get; private set; }
+    }
+
+    /// <summary>Provides data when a page is shown.</summary>
+    public class StepWizardPageInitEventArgs : EventArgs
+    {
+        public StepWizardPageInitEventArgs(StepWizardPage page, int pageIndex)
+        {
+            Page = page;
+            PageIndex = pageIndex;
+        }
+
+        public StepWizardPage Page { get; private set; }
+        public int PageIndex { get; private set; }
+    }
+
+    /// <summary>Provides data when a page is being committed before navigation.</summary>
+    public class StepWizardPageConfirmEventArgs : CancelEventArgs
+    {
+        public StepWizardPageConfirmEventArgs(StepWizardPage page, int pageIndex)
         {
             Page = page;
             PageIndex = pageIndex;
