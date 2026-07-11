@@ -17,6 +17,7 @@ namespace AG.StepWizard
         private bool allowNext = true;
         private bool allowCancel = true;
         private bool allowFinish = true;
+        private bool showCancel = true;
         private StepWizardPage nextPage;
         private bool suppress;
 
@@ -92,6 +93,24 @@ namespace AG.StepWizard
                 }
 
                 allowCancel = value;
+                NotifyOwnerBehaviorChanged();
+            }
+        }
+
+        /// <summary>Gets or sets whether Cancel is visible while this page is selected.</summary>
+        [DefaultValue(true)]
+        [Category("Behavior")]
+        public bool ShowCancel
+        {
+            get { return showCancel; }
+            set
+            {
+                if (showCancel == value)
+                {
+                    return;
+                }
+
+                showCancel = value;
                 NotifyOwnerBehaviorChanged();
             }
         }

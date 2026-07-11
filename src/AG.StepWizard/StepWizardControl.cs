@@ -1175,7 +1175,7 @@ namespace AG.StepWizard
             nextButton.Visible = !IsFinishPage;
             finishButton.Visible = showFinishButton && IsFinishPage;
             finishButton.Enabled = SelectedPage != null && SelectedPage.AllowFinish;
-            cancelButton.Visible = showCancelButton;
+            cancelButton.Visible = showCancelButton && (SelectedPage == null || SelectedPage.ShowCancel);
             cancelButton.Enabled = SelectedPage == null || SelectedPage.AllowCancel;
         }
 
